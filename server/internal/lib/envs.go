@@ -7,10 +7,15 @@ import (
 )
 
 type EnvsType struct {
+	ENV                  string
 	DATABASE_URL         string
 	GOOGLE_CLIENT_ID     string
 	GOOGLE_CLIENT_SECRET string
 	AUTH_REDIRECT_URL    string
+	FRONTEND_URL         string
+	JWT_ACCESS_SECRET    string
+	JWT_REFRESH_SECRET   string
+	AUTH_COOKIE_DOMAIN   string
 }
 
 var Envs *EnvsType
@@ -31,6 +36,9 @@ func LoadEnv() error {
 		"GOOGLE_CLIENT_ID",
 		"GOOGLE_CLIENT_SECRET",
 		"AUTH_REDIRECT_URL",
+		"FRONTEND_URL",
+		"JWT_ACCESS_SECRET",
+		"JWT_REFRESH_SECRET",
 	}
 
 	var enverr []string
@@ -47,12 +55,25 @@ func LoadEnv() error {
 	}
 
 	envs := &EnvsType{
+		ENV:                  viper.GetString("ENV"),
 		DATABASE_URL:         viper.GetString("DATABASE_URL"),
 		GOOGLE_CLIENT_ID:     viper.GetString("GOOGLE_CLIENT_ID"),
 		GOOGLE_CLIENT_SECRET: viper.GetString("GOOGLE_CLIENT_SECRET"),
 		AUTH_REDIRECT_URL:    viper.GetString("AUTH_REDIRECT_URL"),
+		FRONTEND_URL:         viper.GetString("FRONTEND_URL"),
+		JWT_ACCESS_SECRET:    viper.GetString("JWT_ACCESS_SECRET"),
+		JWT_REFRESH_SECRET:   viper.GetString("JWT_REFRESH_SECRET"),
+		AUTH_COOKIE_DOMAIN:   viper.GetString("AUTH_COOKIE_DOMAIN"),
+	}
+
+	if envs.ENV == "" {
+		envs.ENV = "dev"
 	}
 
 	Envs = envs
 	return nil
+}
+
+func IsProd() bool {
+	return Envs != nil && Envs.ENV == "prod"
 }

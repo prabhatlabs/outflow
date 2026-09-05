@@ -19,5 +19,14 @@ func AuthRouter(database *lib.DB) *chi.Mux {
 	r.Post("/login/email", s.emailMagicLinkLogin)
 	r.Get("/callback/email", s.emailMagicLinkCallback)
 
+	r.Group(func(r chi.Router) {
+		r.Use(lib.AuthMiddleware)
+
+		r.Get("/me", s.me)
+	})
+
+	r.Post("/refresh", s.refresh)
+	r.Post("/logout", s.logout)
+
 	return r
 }

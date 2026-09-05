@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/prabhatlabs/outflow/internal/db"
+	"github.com/prabhatlabs/outflow/internal/lib"
 	"github.com/prabhatlabs/outflow/internal/lib/response"
 	"golang.org/x/oauth2"
 	googleoauth "google.golang.org/api/oauth2/v2"
@@ -73,10 +74,15 @@ func (s *Service) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-		Message: "Logged in",
-		Data:    user,
-	})
+	if err := s.issueSession(w, user.ID); err != nil {
+		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "Failed to create session",
+		})
+		return
+	}
+
+	http.Redirect(w, r, lib.Envs.FRONTEND_URL, http.StatusFound)
 }
 
 func (s *Service) emailMagicLinkLogin(w http.ResponseWriter, r *http.Request) {
