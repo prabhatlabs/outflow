@@ -1,2 +1,4 @@
+.opencode
 plan
-.env
+*.env
+config.ymal

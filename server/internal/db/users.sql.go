@@ -11,6 +11,15 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const activateUser = `-- name: ActivateUser :exec
+UPDATE users SET is_active = TRUE WHERE id = $1
+`
+
+func (q *Queries) ActivateUser(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, activateUser, id)
+	return err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     email,
@@ -74,12 +83,170 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const getUserWithEmail = `-- name: GetUserWithEmail :one
-SELECT id, email, first_name, last_name, avatar_url, is_active, timezone, email_verified_at, last_login_mode, last_login_at, created_at, updated_at FROM users WHERE email = $1
+const deactivateUser = `-- name: DeactivateUser :exec
+UPDATE users SET is_active = FALSE WHERE id = $1
 `
 
-func (q *Queries) GetUserWithEmail(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRow(ctx, getUserWithEmail, email)
+func (q *Queries) DeactivateUser(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deactivateUser, id)
+	return err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUser, id)
+	return err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, email, first_name, last_name, avatar_url, is_active, timezone, email_verified_at, last_login_mode, last_login_at, created_at, updated_at FROM users WHERE LOWER(email) = LOWER($1)
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, lower)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.FirstName,
+		&i.LastName,
+		&i.AvatarUrl,
+		&i.IsActive,
+		&i.Timezone,
+		&i.EmailVerifiedAt,
+		&i.LastLoginMode,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, email, first_name, last_name, avatar_url, is_active, timezone, email_verified_at, last_login_mode, last_login_at, created_at, updated_at FROM users WHERE id = $1
+`
+
+func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByID, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.FirstName,
+		&i.LastName,
+		&i.AvatarUrl,
+		&i.IsActive,
+		&i.Timezone,
+		&i.EmailVerifiedAt,
+		&i.LastLoginMode,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users SET
+    first_name = COALESCE($1, first_name),
+    last_name = COALESCE($2, last_name),
+    avatar_url = COALESCE($3, avatar_url),
+    timezone = COALESCE($4, timezone),
+    email_verified_at = COALESCE($5, email_verified_at),
+    last_login_mode = COALESCE($6, last_login_mode),
+    last_login_at = COALESCE($7, last_login_at),
+    is_active = COALESCE($8, is_active)
+WHERE id = $9
+RETURNING id, email, first_name, last_name, avatar_url, is_active, timezone, email_verified_at, last_login_mode, last_login_at, created_at, updated_at
+`
+
+type UpdateUserParams struct {
+	FirstName       pgtype.Text
+	LastName        pgtype.Text
+	AvatarUrl       pgtype.Text
+	Timezone        pgtype.Text
+	EmailVerifiedAt pgtype.Timestamptz
+	LastLoginMode   NullLoginProvider
+	LastLoginAt     pgtype.Timestamptz
+	IsActive        pgtype.Bool
+	ID              pgtype.UUID
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.FirstName,
+		arg.LastName,
+		arg.AvatarUrl,
+		arg.Timezone,
+		arg.EmailVerifiedAt,
+		arg.LastLoginMode,
+		arg.LastLoginAt,
+		arg.IsActive,
+		arg.ID,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.FirstName,
+		&i.LastName,
+		&i.AvatarUrl,
+		&i.IsActive,
+		&i.Timezone,
+		&i.EmailVerifiedAt,
+		&i.LastLoginMode,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUserLastLogin = `-- name: UpdateUserLastLogin :one
+UPDATE users SET
+    last_login_mode = $2,
+    last_login_at = NOW()
+WHERE id = $1
+RETURNING id, email, first_name, last_name, avatar_url, is_active, timezone, email_verified_at, last_login_mode, last_login_at, created_at, updated_at
+`
+
+type UpdateUserLastLoginParams struct {
+	ID            pgtype.UUID
+	LastLoginMode NullLoginProvider
+}
+
+func (q *Queries) UpdateUserLastLogin(ctx context.Context, arg UpdateUserLastLoginParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUserLastLogin, arg.ID, arg.LastLoginMode)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.FirstName,
+		&i.LastName,
+		&i.AvatarUrl,
+		&i.IsActive,
+		&i.Timezone,
+		&i.EmailVerifiedAt,
+		&i.LastLoginMode,
+		&i.LastLoginAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const verifyUserEmail = `-- name: VerifyUserEmail :one
+UPDATE users SET
+    email_verified_at = NOW()
+WHERE id = $1
+RETURNING id, email, first_name, last_name, avatar_url, is_active, timezone, email_verified_at, last_login_mode, last_login_at, created_at, updated_at
+`
+
+func (q *Queries) VerifyUserEmail(ctx context.Context, id pgtype.UUID) (User, error) {
+	row := q.db.QueryRow(ctx, verifyUserEmail, id)
 	var i User
 	err := row.Scan(
 		&i.ID,

@@ -1,4 +1,6 @@
-generate:
+# scripts
+db-generate:
 	sqlc generate -f ../db/sqlc.yaml
 
-# scripts
+run:
+	go run ./cmd/main.go
