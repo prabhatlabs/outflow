@@ -57,10 +57,7 @@ func (s *Service) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userInfo.Email == "" || userInfo.Id == "" {
-		response.SendJsonResponse(w, http.StatusBadRequest, response.ErrorResponse{
-			Error:   "Bad Request",
-			Message: "Google account is missing email or id",
-		})
+		response.BadRequest(w, "Google account is missing email or id")
 		return
 	}
 
@@ -74,18 +71,12 @@ func (s *Service) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		EmailVerified:     userInfo.VerifiedEmail != nil && *userInfo.VerifiedEmail,
 	})
 	if err != nil {
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to create user",
-		})
+		response.InternalServerError(w, "Failed to create user")
 		return
 	}
 
 	if err := s.issueSession(w, user.ID); err != nil {
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to create session",
-		})
+		response.InternalServerError(w, "Failed to create session")
 		return
 	}
 
@@ -98,20 +89,14 @@ func (s *Service) emailMagicLinkLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.UnmarshalRead(r.Body, &reqData); err != nil {
-		response.SendJsonResponse(w, http.StatusBadRequest, response.ErrorResponse{
-			Error:   "Bad Request",
-			Message: "Invalid JSON payload",
-		})
+		response.BadRequest(w, "Invalid JSON payload")
 		return
 	}
 
 	// checking if the email address is valid
 	emailAddr := normalizeEmail(reqData.Email)
 	if _, err := mail.ParseAddress(emailAddr); err != nil || !strings.Contains(emailAddr, "@") {
-		response.SendJsonResponse(w, http.StatusBadRequest, response.ErrorResponse{
-			Error:   "Bad Request",
-			Message: "Invalid email address",
-		})
+		response.BadRequest(w, "Invalid email address")
 		return
 	}
 
@@ -120,34 +105,22 @@ func (s *Service) emailMagicLinkLogin(w http.ResponseWriter, r *http.Request) {
 	case errors.Is(err, pgx.ErrNoRows):
 		// an unexpired code is still on file for this email; keep the old
 		// link working instead of sending a fresh email
-		response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-			Message: "Sign-in link sent to your email",
-			Data:    nil,
-		})
+		response.OK(w, "Sign-in link sent to your email", nil)
 		return
 	case err != nil:
 		log.Printf("auth: create email login code for %s: %v", emailAddr, err)
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to create login code",
-		})
+		response.InternalServerError(w, "Failed to create login code")
 		return
 	}
 
 	link := strings.TrimRight(lib.Envs.SERVER_URL, "/") + "/auth/callback/email?code=" + code.String()
 	if err := email.SendMagicLink(emailAddr, link, int(EmailLoginCodeTTL.Minutes())); err != nil {
 		log.Printf("auth: send magic link to %s: %v", emailAddr, err)
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to send login email",
-		})
+		response.InternalServerError(w, "Failed to send login email")
 		return
 	}
 
-	response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-		Message: "Sign-in link sent to your email",
-		Data:    nil,
-	})
+	response.OK(w, "Sign-in link sent to your email", nil)
 }
 
 func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request) {
@@ -155,10 +128,7 @@ func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request)
 
 	code, err := uuid.Parse(r.URL.Query().Get("code"))
 	if err != nil {
-		response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
-			Error:   "Unauthorized",
-			Message: "Invalid or expired code",
-		})
+		response.Unauthorized(w, "Invalid or expired code")
 		return
 	}
 
@@ -167,10 +137,7 @@ func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request)
 		if !errors.Is(err, pgx.ErrNoRows) {
 			log.Printf("auth: consume email login code: %v", err)
 		}
-		response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
-			Error:   "Unauthorized",
-			Message: "Invalid or expired code",
-		})
+		response.Unauthorized(w, "Invalid or expired code")
 		return
 	}
 
@@ -183,18 +150,12 @@ func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request)
 	})
 	if err != nil {
 		log.Printf("auth: magic link login for %s: %v", emailAddr, err)
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to create user",
-		})
+		response.InternalServerError(w, "Failed to create user")
 		return
 	}
 
 	if err := s.issueSession(w, user.ID); err != nil {
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to create session",
-		})
+		response.InternalServerError(w, "Failed to create session")
 		return
 	}
 

@@ -24,6 +24,7 @@ func AuthRouter(database *lib.DB) *chi.Mux {
 		r.Use(lib.AuthMiddleware)
 
 		r.Get("/me", s.me)
+		r.Patch("/me", s.updateMe)
 	})
 
 	r.Post("/refresh", s.refresh)

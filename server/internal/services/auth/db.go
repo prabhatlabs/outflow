@@ -59,7 +59,7 @@ func (s *Service) createUserIfNotExists(ctx context.Context, in createUserIfNotE
 			return err
 		}
 		if errors.Is(err, pgx.ErrNoRows) {
-			now := pgtype.Timestamptz{Time: time.Now(), Valid: true}
+			now := lib.Timestamp(time.Now())
 			params := db.CreateUserParams{
 				Email:         in.Email,
 				FirstName:     in.FirstName,
@@ -150,7 +150,7 @@ const EmailLoginCodeTTL = 30 * time.Minute
 func (s *Service) createEmailLoginCode(ctx context.Context, email string) (uuid.UUID, error) {
 	row, err := s.db.Q.CreateEmailLoginCode(ctx, db.CreateEmailLoginCodeParams{
 		Email:     email,
-		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(EmailLoginCodeTTL), Valid: true},
+		ExpiresAt: lib.Timestamp(time.Now().Add(EmailLoginCodeTTL)),
 	})
 	if err != nil {
 		return uuid.Nil, err

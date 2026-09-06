@@ -3,9 +3,11 @@ package groups
 import (
 	"encoding/json/v2"
 	"errors"
+	"math/big"
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/prabhatlabs/outflow/internal/db"
@@ -27,16 +29,9 @@ func parseGroupType(s string) (db.GroupType, bool) {
 	}
 }
 
-func badRequest(w http.ResponseWriter, message string) {
-	response.SendJsonResponse(w, http.StatusBadRequest, response.ErrorResponse{
-		Error:   "Bad Request",
-		Message: message,
-	})
-}
-
 func (s *Service) allHandler(w http.ResponseWriter, r *http.Request) {
 	userID := lib.UserIDFromContextWithUnauthorizedErr(r.Context(), w)
-	groups, err := s.db.Q.ListGroupsByUserID(r.Context(), pgtype.UUID{Bytes: userID, Valid: true})
+	groups, err := s.db.Q.ListGroupsByUserID(r.Context(), lib.PGUUID(userID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -44,10 +39,7 @@ func (s *Service) allHandler(w http.ResponseWriter, r *http.Request) {
 	if groups == nil {
 		groups = []db.Group{}
 	}
-	response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-		Message: "Groups fetched successfully",
-		Data:    groups,
-	})
+	response.OK(w, "Groups fetched successfully", groups)
 }
 
 func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
@@ -61,13 +53,13 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		DefaultCurrency string `json:"default_currency"`
 	}
 	if err := json.UnmarshalRead(r.Body, &req); err != nil {
-		badRequest(w, "Invalid JSON payload")
+		response.BadRequest(w, "Invalid JSON payload")
 		return
 	}
 
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		badRequest(w, "Group name is required")
+		response.BadRequest(w, "Group name is required")
 		return
 	}
 
@@ -75,7 +67,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 	if req.Type != "" {
 		t, valid := parseGroupType(req.Type)
 		if !valid {
-			badRequest(w, "Invalid group type")
+			response.BadRequest(w, "Invalid group type")
 			return
 		}
 		groupType = t
@@ -95,14 +87,14 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 			AvatarUrl:       lib.OptionalText(strings.TrimSpace(req.AvatarURL)),
 			Type:            groupType,
 			DefaultCurrency: currency,
-			CreatedBy:       pgtype.UUID{Bytes: userID, Valid: true},
+			CreatedBy:       lib.PGUUID(userID),
 		})
 		if err != nil {
 			return err
 		}
 
 		_, err = q.CreateGroupMember(r.Context(), db.CreateGroupMemberParams{
-			UserID:  pgtype.UUID{Bytes: userID, Valid: true},
+			UserID:  lib.PGUUID(userID),
 			GroupID: group.ID,
 			Role:    db.GroupMemberRoleOwner,
 			Status:  db.GroupMemberStatusActive,
@@ -110,48 +102,33 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to create group",
-		})
+		response.InternalServerError(w, "Failed to create group")
 		return
 	}
 
-	response.SendJsonResponse(w, http.StatusCreated, response.SuccessResponse{
-		Message: "Group created successfully",
-		Data:    group,
-	})
+	response.Created(w, "Group created successfully", group)
 }
 
 func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 	groupID := lib.GroupIDFromContextWithNotFoundErr(r.Context(), w)
-	groupPgID := pgtype.UUID{Bytes: groupID, Valid: true}
+	groupPgID := lib.PGUUID(groupID)
 
 	group, err := s.db.Q.GetGroupByID(r.Context(), groupPgID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			response.SendJsonResponse(w, http.StatusNotFound, response.ErrorResponse{
-				Error:   "Not Found",
-				Message: "Group not found",
-			})
+			response.NotFound(w, "Group not found")
 			return
 		}
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to fetch group",
-		})
+		response.InternalServerError(w, "Failed to fetch group")
 		return
 	}
 
-	response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-		Message: "Group fetched successfully",
-		Data:    group,
-	})
+	response.OK(w, "Group fetched successfully", group)
 }
 
 func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 	groupID := lib.GroupIDFromContextWithNotFoundErr(r.Context(), w)
-	groupPgID := pgtype.UUID{Bytes: groupID, Valid: true}
+	groupPgID := lib.PGUUID(groupID)
 
 	var req struct {
 		Name            *string `json:"name"`
@@ -161,7 +138,7 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 		DefaultCurrency *string `json:"default_currency"`
 	}
 	if err := json.UnmarshalRead(r.Body, &req); err != nil {
-		badRequest(w, "Invalid JSON payload")
+		response.BadRequest(w, "Invalid JSON payload")
 		return
 	}
 
@@ -171,24 +148,24 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 	if req.Name != nil {
 		name := strings.TrimSpace(*req.Name)
 		if name == "" {
-			badRequest(w, "Group name cannot be empty")
+			response.BadRequest(w, "Group name cannot be empty")
 			return
 		}
-		params.Name = pgtype.Text{String: name, Valid: true}
+		params.Name = lib.RequiredText(name)
 		updated = true
 	}
 	if req.Description != nil {
-		params.Description = pgtype.Text{String: strings.TrimSpace(*req.Description), Valid: true}
+		params.Description = lib.RequiredText(strings.TrimSpace(*req.Description))
 		updated = true
 	}
 	if req.AvatarURL != nil {
-		params.AvatarUrl = pgtype.Text{String: strings.TrimSpace(*req.AvatarURL), Valid: true}
+		params.AvatarUrl = lib.RequiredText(strings.TrimSpace(*req.AvatarURL))
 		updated = true
 	}
 	if req.Type != nil {
 		t, valid := parseGroupType(*req.Type)
 		if !valid {
-			badRequest(w, "Invalid group type")
+			response.BadRequest(w, "Invalid group type")
 			return
 		}
 		params.Type = db.NullGroupType{GroupType: t, Valid: true}
@@ -197,15 +174,15 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 	if req.DefaultCurrency != nil {
 		currency := strings.ToUpper(strings.TrimSpace(*req.DefaultCurrency))
 		if currency == "" {
-			badRequest(w, "Default currency cannot be empty")
+			response.BadRequest(w, "Default currency cannot be empty")
 			return
 		}
-		params.DefaultCurrency = pgtype.Text{String: currency, Valid: true}
+		params.DefaultCurrency = lib.RequiredText(currency)
 		updated = true
 	}
 
 	if !updated {
-		badRequest(w, "No fields to update")
+		response.BadRequest(w, "No fields to update")
 		return
 	}
 
@@ -214,47 +191,82 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 	group, err := s.db.Q.UpdateGroup(r.Context(), params)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			response.SendJsonResponse(w, http.StatusNotFound, response.ErrorResponse{
-				Error:   "Not Found",
-				Message: "Group not found",
-			})
+			response.NotFound(w, "Group not found")
 			return
 		}
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to update group",
-		})
+		response.InternalServerError(w, "Failed to update group")
 		return
 	}
 
-	response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-		Message: "Group updated successfully",
-		Data:    group,
-	})
+	response.OK(w, "Group updated successfully", group)
 }
 
 func (s *Service) archiveHandler(w http.ResponseWriter, r *http.Request) {
 	groupID := lib.GroupIDFromContextWithNotFoundErr(r.Context(), w)
-	groupPgID := pgtype.UUID{Bytes: groupID, Valid: true}
+	groupPgID := lib.PGUUID(groupID)
 
 	group, err := s.db.Q.ArchiveGroup(r.Context(), groupPgID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			response.SendJsonResponse(w, http.StatusNotFound, response.ErrorResponse{
-				Error:   "Not Found",
-				Message: "Group not found",
-			})
+			response.NotFound(w, "Group not found")
 			return
 		}
-		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-			Error:   "Internal Server Error",
-			Message: "Failed to archive group",
-		})
+		response.InternalServerError(w, "Failed to archive group")
 		return
 	}
 
-	response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-		Message: "Group archived successfully",
-		Data:    group,
-	})
+	response.OK(w, "Group archived successfully", group)
+}
+
+// settled = repayments received minus sent.
+type balanceRow struct {
+	UserID    pgtype.UUID    `json:"user_id"`
+	FirstName string         `json:"first_name"`
+	LastName  pgtype.Text    `json:"last_name"`
+	Paid      pgtype.Numeric `json:"paid"`
+	Owed      pgtype.Numeric `json:"owed"`
+	Settled   pgtype.Numeric `json:"settled"`
+	Net       pgtype.Numeric `json:"net"`
+}
+
+func numSub(a, b pgtype.Numeric) pgtype.Numeric {
+	af, _ := a.Float64Value()
+	bf, _ := b.Float64Value()
+	res := big.NewFloat(af.Float64 - bf.Float64)
+	var n pgtype.Numeric
+	_ = n.Scan(res)
+	return n
+}
+
+// balancesHandler computes net position per active member:
+// net = paid - owed + settled_from - settled_to (negative means the member
+// owes the group).
+func (s *Service) balancesHandler(w http.ResponseWriter, r *http.Request) {
+	groupID := lib.GroupIDFromContextWithNotFoundErr(r.Context(), w)
+	if groupID == uuid.Nil {
+		return
+	}
+
+	rows, err := s.db.Q.ListGroupBalances(r.Context(), lib.PGUUID(groupID))
+	if err != nil {
+		response.InternalServerError(w, "Failed to compute balances")
+		return
+	}
+
+	out := make([]balanceRow, 0, len(rows))
+	for _, row := range rows {
+		settled := numSub(row.SettledTo, row.SettledFrom)
+		net := numSub(numSub(row.Paid, row.Owed), settled)
+		out = append(out, balanceRow{
+			UserID:    row.UserID,
+			FirstName: row.FirstName,
+			LastName:  row.LastName,
+			Paid:      row.Paid,
+			Owed:      row.Owed,
+			Settled:   settled,
+			Net:       net,
+		})
+	}
+
+	response.OK(w, "Balances fetched successfully", out)
 }

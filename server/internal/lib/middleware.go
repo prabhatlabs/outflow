@@ -29,10 +29,7 @@ func UserIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 func UserIDFromContextWithUnauthorizedErr(ctx context.Context, w http.ResponseWriter) uuid.UUID {
 	userID, ok := UserIDFromContext(ctx)
 	if !ok {
-		response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
-			Error:   "Unauthorized",
-			Message: "Authentication required",
-		})
+		response.Unauthorized(w, "Authentication required")
 		return uuid.Nil
 	}
 	return userID
@@ -42,19 +39,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(AccessCookieName)
 		if err != nil {
-			response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
-				Error:   "Unauthorized",
-				Message: "Authentication required",
-			})
+			response.Unauthorized(w, "Authentication required")
 			return
 		}
 
 		claims, err := ParseAccessToken(cookie.Value)
 		if err != nil {
-			response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
-				Error:   "Unauthorized",
-				Message: "Invalid or expired session",
-			})
+			response.Unauthorized(w, "Invalid or expired session")
 			return
 		}
 
@@ -71,10 +62,7 @@ func GroupIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 func GroupIDFromContextWithNotFoundErr(ctx context.Context, w http.ResponseWriter) uuid.UUID {
 	groupID, ok := GroupIDFromContext(ctx)
 	if !ok {
-		response.SendJsonResponse(w, http.StatusNotFound, response.ErrorResponse{
-			Error:   "Not Found",
-			Message: "Group not found",
-		})
+		response.NotFound(w, "Group not found")
 		return uuid.Nil
 	}
 	return groupID
@@ -88,10 +76,7 @@ func GroupMemberFromContext(ctx context.Context) (db.GroupMember, bool) {
 func GroupMemberFromContextWithForbiddenErr(ctx context.Context, w http.ResponseWriter) db.GroupMember {
 	member, ok := GroupMemberFromContext(ctx)
 	if !ok {
-		response.SendJsonResponse(w, http.StatusForbidden, response.ErrorResponse{
-			Error:   "Forbidden",
-			Message: "Access denied",
-		})
+		response.Forbidden(w, "Access denied")
 		return db.GroupMember{}
 	}
 	return member
@@ -103,61 +88,43 @@ func parseGroupIDParam(r *http.Request) (pgtype.UUID, uuid.UUID, error) {
 	if err != nil {
 		return pgtype.UUID{}, uuid.Nil, err
 	}
-	return pgtype.UUID{Bytes: id, Valid: true}, id, nil
+	return PGUUID(id), id, nil
 }
 
 func requireGroupMembership(database *DB, requireOwner bool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID, ok := UserIDFromContext(r.Context())
 		if !ok {
-			response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
-				Error:   "Unauthorized",
-				Message: "Authentication required",
-			})
+			response.Unauthorized(w, "Authentication required")
 			return
 		}
 
 		groupPgID, groupID, err := parseGroupIDParam(r)
 		if err != nil {
-			response.SendJsonResponse(w, http.StatusBadRequest, response.ErrorResponse{
-				Error:   "Bad Request",
-				Message: "Invalid group ID",
-			})
+			response.BadRequest(w, "Invalid group ID")
 			return
 		}
 
 		member, err := database.Q.GetGroupMemberByUserAndGroup(r.Context(), db.GetGroupMemberByUserAndGroupParams{
-			UserID:  pgtype.UUID{Bytes: userID, Valid: true},
+			UserID:  PGUUID(userID),
 			GroupID: groupPgID,
 		})
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				response.SendJsonResponse(w, http.StatusNotFound, response.ErrorResponse{
-					Error:   "Not Found",
-					Message: "Group not found",
-				})
+				response.NotFound(w, "Group not found")
 				return
 			}
-			response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
-				Error:   "Internal Server Error",
-				Message: "Failed to verify group membership",
-			})
+			response.InternalServerError(w, "Failed to verify group membership")
 			return
 		}
 
 		if member.Status != db.GroupMemberStatusActive {
-			response.SendJsonResponse(w, http.StatusForbidden, response.ErrorResponse{
-				Error:   "Forbidden",
-				Message: "You are no longer a member of this group",
-			})
+			response.Forbidden(w, "You are no longer a member of this group")
 			return
 		}
 
 		if requireOwner && member.Role != db.GroupMemberRoleOwner {
-			response.SendJsonResponse(w, http.StatusForbidden, response.ErrorResponse{
-				Error:   "Forbidden",
-				Message: "Only group owners can perform this action",
-			})
+			response.Forbidden(w, "Only group owners can perform this action")
 			return
 		}
 
