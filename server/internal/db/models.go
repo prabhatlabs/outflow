@@ -384,6 +384,13 @@ type Category struct {
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
+type EmailLoginCode struct {
+	ID        pgtype.UUID        `json:"id"`
+	Email     string             `json:"email"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type Expense struct {
 	ID          pgtype.UUID        `json:"id"`
 	GroupID     pgtype.UUID        `json:"group_id"`

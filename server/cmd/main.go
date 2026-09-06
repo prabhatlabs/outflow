@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/prabhatlabs/outflow/internal/lib"
+	"github.com/prabhatlabs/outflow/internal/lib/email"
 	"github.com/prabhatlabs/outflow/internal/services/auth"
 	"github.com/prabhatlabs/outflow/internal/services/groups"
 )
@@ -17,6 +18,7 @@ func main() {
 	if err := lib.LoadEnv(); err != nil {
 		log.Fatal(err)
 	}
+	email.Init()
 
 	ctx := context.Background()
 	database, err := lib.ConnectDB(ctx, lib.Envs.DATABASE_URL)

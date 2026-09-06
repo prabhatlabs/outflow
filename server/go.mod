@@ -8,6 +8,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
+	github.com/resend/resend-go/v4 v4.2.0
 	github.com/spf13/viper v1.21.0
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.297.0

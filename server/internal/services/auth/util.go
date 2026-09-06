@@ -21,6 +21,10 @@ func generateState() string {
 	return state
 }
 
+func normalizeEmail(raw string) string {
+	return strings.ToLower(strings.TrimSpace(raw))
+}
+
 func emailLocal(email string) string {
 	if i := strings.IndexByte(email, '@'); i > 0 {
 		return email[:i]

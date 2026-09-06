@@ -91,13 +91,13 @@ function Login() {
           </form>
 
           {error && (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="text-sm text-destructive text-center" role="alert">
               {error}
             </p>
           )}
           {sent && (
-            <p className="text-sm text-muted-foreground">
-              Magic link sent to {email}. (Email delivery not wired up yet.)
+            <p className="text-sm text-muted-foreground text-center">
+              Sign-in link sent to {email}. Check your inbox.
             </p>
           )}
         </div>

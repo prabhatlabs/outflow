@@ -2,10 +2,17 @@ package auth
 
 import (
 	"encoding/json/v2"
+	"errors"
+	"log"
 	"net/http"
+	"net/mail"
+	"strings"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/prabhatlabs/outflow/internal/db"
 	"github.com/prabhatlabs/outflow/internal/lib"
+	"github.com/prabhatlabs/outflow/internal/lib/email"
 	"github.com/prabhatlabs/outflow/internal/lib/response"
 	"golang.org/x/oauth2"
 	googleoauth "google.golang.org/api/oauth2/v2"
@@ -98,25 +105,56 @@ func (s *Service) emailMagicLinkLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ---> generate code, save code with mail and send mail with resend <---
-	// link = `/callback/email?code=<code>`
+	// checking if the email address is valid
+	emailAddr := normalizeEmail(reqData.Email)
+	if _, err := mail.ParseAddress(emailAddr); err != nil || !strings.Contains(emailAddr, "@") {
+		response.SendJsonResponse(w, http.StatusBadRequest, response.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "Invalid email address",
+		})
+		return
+	}
+
+	code, err := s.createEmailLoginCode(r.Context(), emailAddr)
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		// an unexpired code is still on file for this email; keep the old
+		// link working instead of sending a fresh email
+		response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
+			Message: "Sign-in link sent to your email",
+			Data:    nil,
+		})
+		return
+	case err != nil:
+		log.Printf("auth: create email login code for %s: %v", emailAddr, err)
+		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "Failed to create login code",
+		})
+		return
+	}
+
+	link := strings.TrimRight(lib.Envs.SERVER_URL, "/") + "/auth/callback/email?code=" + code.String()
+	if err := email.SendMagicLink(emailAddr, link, int(EmailLoginCodeTTL.Minutes())); err != nil {
+		log.Printf("auth: send magic link to %s: %v", emailAddr, err)
+		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "Failed to send login email",
+		})
+		return
+	}
 
 	response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-		Message: "Magic link sent to your email",
+		Message: "Sign-in link sent to your email",
 		Data:    nil,
 	})
 }
 
 func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Query().Get("code")
-	if code == "" {
-		http.Error(w, "Code not found", http.StatusBadRequest)
-		return
-	}
+	ctx := r.Context()
 
-	// ---> verify code <---
-	email := ""
-	if email == "" {
+	code, err := uuid.Parse(r.URL.Query().Get("code"))
+	if err != nil {
 		response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
 			Error:   "Unauthorized",
 			Message: "Invalid or expired code",
@@ -124,14 +162,27 @@ func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := s.createUserIfNotExists(r.Context(), createUserIfNotExistsInput{
-		Email:             email,
-		FirstName:         emailLocal(email),
+	emailAddr, err := s.consumeEmailLoginCode(ctx, code)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			log.Printf("auth: consume email login code: %v", err)
+		}
+		response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
+			Error:   "Unauthorized",
+			Message: "Invalid or expired code",
+		})
+		return
+	}
+
+	user, err := s.createUserIfNotExists(ctx, createUserIfNotExistsInput{
+		Email:             emailAddr,
+		FirstName:         emailLocal(emailAddr),
 		Provider:          db.LoginProviderEmail,
-		ProviderAccountID: email,
+		ProviderAccountID: emailAddr,
 		EmailVerified:     true,
 	})
 	if err != nil {
+		log.Printf("auth: magic link login for %s: %v", emailAddr, err)
 		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
 			Error:   "Internal Server Error",
 			Message: "Failed to create user",
@@ -139,8 +190,13 @@ func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	response.SendJsonResponse(w, http.StatusOK, response.SuccessResponse{
-		Message: "Logged in",
-		Data:    user,
-	})
+	if err := s.issueSession(w, user.ID); err != nil {
+		response.SendJsonResponse(w, http.StatusInternalServerError, response.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "Failed to create session",
+		})
+		return
+	}
+
+	http.Redirect(w, r, lib.Envs.FRONTEND_URL, http.StatusFound)
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/prabhatlabs/outflow/internal/db"
@@ -139,4 +140,27 @@ func (s *Service) createUserIfNotExists(ctx context.Context, in createUserIfNotE
 	})
 
 	return user, err
+}
+
+const EmailLoginCodeTTL = 30 * time.Minute
+
+// createEmailLoginCode issues a code (row id = uuidv7 code) for an email.
+// Returns pgx.ErrNoRows when an unexpired code already exists, in which case
+// nothing is rotated and no new email should be sent.
+func (s *Service) createEmailLoginCode(ctx context.Context, email string) (uuid.UUID, error) {
+	row, err := s.db.Q.CreateEmailLoginCode(ctx, db.CreateEmailLoginCodeParams{
+		Email:     email,
+		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(EmailLoginCodeTTL), Valid: true},
+	})
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return uuid.FromBytes(row.ID.Bytes[:])
+}
+
+func (s *Service) consumeEmailLoginCode(ctx context.Context, code uuid.UUID) (string, error) {
+	return s.db.Q.ConsumeEmailLoginCode(ctx, pgtype.UUID{
+		Bytes: code,
+		Valid: true,
+	})
 }

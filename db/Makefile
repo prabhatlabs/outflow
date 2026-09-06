@@ -1,4 +1,4 @@
-include ../.env
+include ../prod.env
 export
 
 MIGRATIONS_DIR=./migrations
