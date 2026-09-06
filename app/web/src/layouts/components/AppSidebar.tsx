@@ -43,13 +43,12 @@ import {
   Settings,
   Summary,
   Tags,
-  User,
   UserPlus,
   Users,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
 type SidebarSubItem = {
@@ -69,55 +68,50 @@ type SidebarNavGroup = {
   items: SidebarNavItem[];
 };
 
-const NAV_GROUPS: SidebarNavGroup[] = [
+function groupNavItems(groupId: string): SidebarNavItem[] {
+  const g = (path: string) => `/${groupId}${path}`;
+  return [
+    { label: "Overview", href: g("/overview"), icon: Summary },
+    { label: "Expenses", href: g("/expenses"), icon: Receipt },
+    { label: "Balances", href: g("/balances"), icon: Scale },
+    {
+      label: "Settlements",
+      href: g("/settlements"),
+      icon: ArrowLeftRight,
+      subItems: [
+        { label: "Settle Up", href: g("/settlements/new") },
+        { label: "Settlement History", href: g("/settlements") },
+      ],
+    },
+    { label: "Group Budgets", href: g("/budgets"), icon: Wallet },
+    { label: "Categories", href: g("/categories"), icon: Tags },
+    {
+      label: "Members",
+      href: g("/members"),
+      icon: UserPlus,
+      subItems: [
+        { label: "All Members", href: g("/members") },
+        { label: "Invitations", href: g("/members/invitations") },
+      ],
+    },
+    { label: "Activity", href: g("/activity"), icon: History },
+    { label: "Group Settings", href: g("/settings"), icon: Settings },
+  ];
+}
+
+const PERSONAL_NAV_ITEMS: SidebarNavItem[] = [
   {
-    label: "Group",
-    items: [
-      { label: "Overview", href: "/overview", icon: Summary },
-      { label: "Expenses", href: "/expenses", icon: Receipt },
-      { label: "Balances", href: "/balances", icon: Scale },
-      {
-        label: "Settlements",
-        href: "/settlements",
-        icon: ArrowLeftRight,
-        subItems: [
-          { label: "Settle Up", href: "/settlements/new" },
-          { label: "Settlement History", href: "/settlements" },
-        ],
-      },
-      { label: "Group Budgets", href: "/budgets", icon: Wallet },
-      { label: "Categories", href: "/categories", icon: Tags },
-      {
-        label: "Members",
-        href: "/members",
-        icon: UserPlus,
-        subItems: [
-          { label: "All Members", href: "/members" },
-          { label: "Invitations", href: "/members/invitations" },
-        ],
-      },
-      { label: "Activity", href: "/activity", icon: History },
-      { label: "Group Settings", href: "/settings", icon: Settings },
+    label: "Groups",
+    href: "/groups",
+    icon: Users,
+    subItems: [
+      { label: "All Groups", href: "/groups" },
+      { label: "Archived Groups", href: "/groups/archived" },
     ],
   },
-  {
-    label: "Personal",
-    items: [
-      {
-        label: "Groups",
-        href: "/groups",
-        icon: Users,
-        subItems: [
-          { label: "All Groups", href: "/groups" },
-          { label: "Archived Groups", href: "/groups/archived" },
-        ],
-      },
-      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { label: "Personal Budgets", href: "/personal-budgets", icon: PiggyBank },
-      { label: "My Invitations", href: "/invitations", icon: Mail },
-      { label: "Profile", href: "/profile", icon: User },
-    ],
-  },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Personal Budgets", href: "/personal-budgets", icon: PiggyBank },
+  { label: "My Invitations", href: "/invitations", icon: Mail },
 ];
 
 function SidebarNavCollapsibleItem({
@@ -132,6 +126,10 @@ function SidebarNavCollapsibleItem({
   const isActive =
     pathname === item.href ||
     item.subItems?.some((sub) => pathname === sub.href) === true;
+
+  useEffect(() => {
+    if (isActive) setOpen(true);
+  }, [isActive]);
 
   return (
     <SidebarMenuItem>
@@ -174,6 +172,12 @@ function getInitials(first_name: string, last_name: string | null) {
 function GroupSwitcher() {
   const { currentGroup, setCurrentGroupById, groups, status } =
     useGroupsStore();
+  const navigate = useNavigate();
+
+  const handleSelect = (id: string) => {
+    setCurrentGroupById(id);
+    navigate(`/${id}/overview`);
+  };
 
   return status == "loading" && groups.length == 0 ? (
     <Skeleton className="h-14 w-full" />
@@ -198,10 +202,7 @@ function GroupSwitcher() {
         <DropdownMenuGroup>
           <DropdownMenuLabel>Groups</DropdownMenuLabel>
           {groups.map((group) => (
-            <DropdownMenuItem
-              key={group.id}
-              onClick={() => setCurrentGroupById(group.id)}
-            >
+            <DropdownMenuItem key={group.id} onClick={() => handleSelect(group.id)}>
               <Avatar size="sm">
                 <AvatarFallback>{getInitials(group.name, null)}</AvatarFallback>
               </Avatar>
@@ -284,6 +285,14 @@ function UserMenu() {
 
 function AppSidebar() {
   const { pathname } = useLocation();
+  const { currentGroup } = useGroupsStore();
+
+  const navGroups: SidebarNavGroup[] = currentGroup
+    ? [
+        { label: "Group", items: groupNavItems(currentGroup.id) },
+        { label: "Personal", items: PERSONAL_NAV_ITEMS },
+      ]
+    : [{ label: "Personal", items: PERSONAL_NAV_ITEMS }];
 
   return (
     <Sidebar className="">
@@ -295,7 +304,7 @@ function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {NAV_GROUPS.map((group) => (
+        {navGroups.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="h-4">{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
