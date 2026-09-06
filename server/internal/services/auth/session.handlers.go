@@ -4,37 +4,14 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/prabhatlabs/outflow/internal/lib"
 	"github.com/prabhatlabs/outflow/internal/lib/response"
 )
 
-func (s *Service) issueSession(w http.ResponseWriter, userID pgtype.UUID) error {
-	id := uuid.UUID(userID.Bytes)
-	accessToken, err := lib.GenerateAccessToken(id)
-	if err != nil {
-		return err
-	}
-	refreshToken, err := lib.GenerateRefreshToken(id)
-	if err != nil {
-		return err
-	}
-
-	lib.SetAuthCookies(w, accessToken, refreshToken)
-	return nil
-}
-
 func (s *Service) me(w http.ResponseWriter, r *http.Request) {
-	userID, ok := lib.UserIDFromContext(r.Context())
-	if !ok {
-		response.SendJsonResponse(w, http.StatusUnauthorized, response.ErrorResponse{
-			Error:   "Unauthorized",
-			Message: "Authentication required",
-		})
-		return
-	}
+	userID := lib.UserIDFromContextWithUnauthorizedErr(r.Context(), w)
 
 	user, err := s.db.Q.GetUserByID(r.Context(), pgtype.UUID{Bytes: userID, Valid: true})
 	if err != nil {

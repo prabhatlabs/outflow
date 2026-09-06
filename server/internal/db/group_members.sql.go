@@ -55,11 +55,11 @@ RETURNING id, user_id, group_id, role, status, invited_by, joined_at, left_at, c
 `
 
 type CreateGroupMemberParams struct {
-	UserID    pgtype.UUID
-	GroupID   pgtype.UUID
-	Role      GroupMemberRole
-	Status    GroupMemberStatus
-	InvitedBy pgtype.UUID
+	UserID    pgtype.UUID       `json:"user_id"`
+	GroupID   pgtype.UUID       `json:"group_id"`
+	Role      GroupMemberRole   `json:"role"`
+	Status    GroupMemberStatus `json:"status"`
+	InvitedBy pgtype.UUID       `json:"invited_by"`
 }
 
 func (q *Queries) CreateGroupMember(ctx context.Context, arg CreateGroupMemberParams) (GroupMember, error) {
@@ -122,8 +122,8 @@ SELECT id, user_id, group_id, role, status, invited_by, joined_at, left_at, crea
 `
 
 type GetGroupMemberByUserAndGroupParams struct {
-	UserID  pgtype.UUID
-	GroupID pgtype.UUID
+	UserID  pgtype.UUID `json:"user_id"`
+	GroupID pgtype.UUID `json:"group_id"`
 }
 
 func (q *Queries) GetGroupMemberByUserAndGroup(ctx context.Context, arg GetGroupMemberByUserAndGroupParams) (GroupMember, error) {
@@ -175,8 +175,8 @@ SELECT id, user_id, group_id, role, status, invited_by, joined_at, left_at, crea
 `
 
 type ListGroupMembersByGroupAndStatusParams struct {
-	GroupID pgtype.UUID
-	Status  GroupMemberStatus
+	GroupID pgtype.UUID       `json:"group_id"`
+	Status  GroupMemberStatus `json:"status"`
 }
 
 func (q *Queries) ListGroupMembersByGroupAndStatus(ctx context.Context, arg ListGroupMembersByGroupAndStatusParams) ([]GroupMember, error) {
@@ -279,8 +279,8 @@ RETURNING id, user_id, group_id, role, status, invited_by, joined_at, left_at, c
 `
 
 type UpdateGroupMemberRoleParams struct {
-	ID   pgtype.UUID
-	Role GroupMemberRole
+	ID   pgtype.UUID     `json:"id"`
+	Role GroupMemberRole `json:"role"`
 }
 
 func (q *Queries) UpdateGroupMemberRole(ctx context.Context, arg UpdateGroupMemberRoleParams) (GroupMember, error) {

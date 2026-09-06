@@ -3,9 +3,13 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/prabhatlabs/outflow/internal/lib"
 	googleoauth "google.golang.org/api/oauth2/v2"
 )
 
@@ -15,13 +19,6 @@ func generateState() string {
 	state := base64.URLEncoding.EncodeToString(b)
 
 	return state
-}
-
-func optionalText(s string) pgtype.Text {
-	if s == "" {
-		return pgtype.Text{}
-	}
-	return pgtype.Text{String: s, Valid: true}
 }
 
 func emailLocal(email string) string {
@@ -39,4 +36,19 @@ func googleFirstName(userInfo *googleoauth.Userinfo) string {
 		return userInfo.Name
 	}
 	return emailLocal(userInfo.Email)
+}
+
+func (s *Service) issueSession(w http.ResponseWriter, userID pgtype.UUID) error {
+	id := uuid.UUID(userID.Bytes)
+	accessToken, err := lib.GenerateAccessToken(id)
+	if err != nil {
+		return err
+	}
+	refreshToken, err := lib.GenerateRefreshToken(id)
+	if err != nil {
+		return err
+	}
+
+	lib.SetAuthCookies(w, accessToken, refreshToken)
+	return nil
 }

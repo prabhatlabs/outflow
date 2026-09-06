@@ -23,8 +23,8 @@ RETURNING id, settlement_id, expense_split_id, created_at
 `
 
 type CreateSettlementSplitParams struct {
-	SettlementID   pgtype.UUID
-	ExpenseSplitID pgtype.UUID
+	SettlementID   pgtype.UUID `json:"settlement_id"`
+	ExpenseSplitID pgtype.UUID `json:"expense_split_id"`
 }
 
 func (q *Queries) CreateSettlementSplit(ctx context.Context, arg CreateSettlementSplitParams) (SettlementSplit, error) {

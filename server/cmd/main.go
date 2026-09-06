@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/prabhatlabs/outflow/internal/lib"
 	"github.com/prabhatlabs/outflow/internal/services/auth"
-	"github.com/prabhatlabs/outflow/internal/services/users"
+	"github.com/prabhatlabs/outflow/internal/services/groups"
 )
 
 func main() {
@@ -36,7 +36,12 @@ func main() {
 	}))
 
 	r.Mount("/auth", auth.AuthRouter(database))
-	r.Mount("/users", users.UserRouter(database))
+
+	r.Group(func(r chi.Router) {
+		r.Use(lib.AuthMiddleware)
+
+		r.Mount("/groups", groups.GroupsRouter(database))
+	})
 
 	http.ListenAndServe(":3000", r)
 }

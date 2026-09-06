@@ -33,13 +33,13 @@ RETURNING id, group_id, from_user_id, to_user_id, amount, payment_method, note, 
 `
 
 type CreateSettlementParams struct {
-	GroupID        pgtype.UUID
-	FromUserID     pgtype.UUID
-	ToUserID       pgtype.UUID
-	Amount         pgtype.Numeric
-	PaymentMethod  PaymentMethod
-	Note           pgtype.Text
-	SettlementDate pgtype.Date
+	GroupID        pgtype.UUID    `json:"group_id"`
+	FromUserID     pgtype.UUID    `json:"from_user_id"`
+	ToUserID       pgtype.UUID    `json:"to_user_id"`
+	Amount         pgtype.Numeric `json:"amount"`
+	PaymentMethod  PaymentMethod  `json:"payment_method"`
+	Note           pgtype.Text    `json:"note"`
+	SettlementDate pgtype.Date    `json:"settlement_date"`
 }
 
 func (q *Queries) CreateSettlement(ctx context.Context, arg CreateSettlementParams) (Settlement, error) {
@@ -106,8 +106,8 @@ ORDER BY settlement_date DESC, created_at DESC
 `
 
 type ListSettlementsByGroupAndUserParams struct {
-	GroupID    pgtype.UUID
-	FromUserID pgtype.UUID
+	GroupID    pgtype.UUID `json:"group_id"`
+	FromUserID pgtype.UUID `json:"from_user_id"`
 }
 
 func (q *Queries) ListSettlementsByGroupAndUser(ctx context.Context, arg ListSettlementsByGroupAndUserParams) ([]Settlement, error) {
@@ -189,11 +189,11 @@ RETURNING id, group_id, from_user_id, to_user_id, amount, payment_method, note, 
 `
 
 type UpdateSettlementParams struct {
-	Amount         pgtype.Numeric
-	PaymentMethod  NullPaymentMethod
-	Note           pgtype.Text
-	SettlementDate pgtype.Date
-	ID             pgtype.UUID
+	Amount         pgtype.Numeric    `json:"amount"`
+	PaymentMethod  NullPaymentMethod `json:"payment_method"`
+	Note           pgtype.Text       `json:"note"`
+	SettlementDate pgtype.Date       `json:"settlement_date"`
+	ID             pgtype.UUID       `json:"id"`
 }
 
 func (q *Queries) UpdateSettlement(ctx context.Context, arg UpdateSettlementParams) (Settlement, error) {

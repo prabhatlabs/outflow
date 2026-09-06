@@ -25,9 +25,9 @@ RETURNING id, user_id, provider, provider_account_id, created_at, updated_at
 `
 
 type CreateAuthParams struct {
-	UserID            pgtype.UUID
-	Provider          NullLoginProvider
-	ProviderAccountID string
+	UserID            pgtype.UUID       `json:"user_id"`
+	Provider          NullLoginProvider `json:"provider"`
+	ProviderAccountID string            `json:"provider_account_id"`
 }
 
 func (q *Queries) CreateAuth(ctx context.Context, arg CreateAuthParams) (Auth, error) {
@@ -58,8 +58,8 @@ DELETE FROM auths WHERE user_id = $1 AND provider = $2
 `
 
 type DeleteAuthByUserAndProviderParams struct {
-	UserID   pgtype.UUID
-	Provider NullLoginProvider
+	UserID   pgtype.UUID       `json:"user_id"`
+	Provider NullLoginProvider `json:"provider"`
 }
 
 func (q *Queries) DeleteAuthByUserAndProvider(ctx context.Context, arg DeleteAuthByUserAndProviderParams) error {
@@ -99,8 +99,8 @@ SELECT id, user_id, provider, provider_account_id, created_at, updated_at FROM a
 `
 
 type GetAuthByProviderAccountIDParams struct {
-	Provider          NullLoginProvider
-	ProviderAccountID string
+	Provider          NullLoginProvider `json:"provider"`
+	ProviderAccountID string            `json:"provider_account_id"`
 }
 
 func (q *Queries) GetAuthByProviderAccountID(ctx context.Context, arg GetAuthByProviderAccountIDParams) (Auth, error) {
@@ -122,8 +122,8 @@ SELECT id, user_id, provider, provider_account_id, created_at, updated_at FROM a
 `
 
 type GetAuthByUserAndProviderParams struct {
-	UserID   pgtype.UUID
-	Provider NullLoginProvider
+	UserID   pgtype.UUID       `json:"user_id"`
+	Provider NullLoginProvider `json:"provider"`
 }
 
 func (q *Queries) GetAuthByUserAndProvider(ctx context.Context, arg GetAuthByUserAndProviderParams) (Auth, error) {

@@ -31,12 +31,12 @@ RETURNING id, group_id, amount_limit, period, start_date, end_date, alert_thresh
 `
 
 type CreateGroupBudgetParams struct {
-	GroupID        pgtype.UUID
-	AmountLimit    pgtype.Numeric
-	Period         BudgetPeriod
-	StartDate      pgtype.Date
-	EndDate        pgtype.Date
-	AlertThreshold int32
+	GroupID        pgtype.UUID    `json:"group_id"`
+	AmountLimit    pgtype.Numeric `json:"amount_limit"`
+	Period         BudgetPeriod   `json:"period"`
+	StartDate      pgtype.Date    `json:"start_date"`
+	EndDate        pgtype.Date    `json:"end_date"`
+	AlertThreshold int32          `json:"alert_threshold"`
 }
 
 func (q *Queries) CreateGroupBudget(ctx context.Context, arg CreateGroupBudgetParams) (GroupBudget, error) {
@@ -139,12 +139,12 @@ RETURNING id, group_id, amount_limit, period, start_date, end_date, alert_thresh
 `
 
 type UpdateGroupBudgetParams struct {
-	AmountLimit    pgtype.Numeric
-	Period         NullBudgetPeriod
-	StartDate      pgtype.Date
-	EndDate        pgtype.Date
-	AlertThreshold pgtype.Int4
-	ID             pgtype.UUID
+	AmountLimit    pgtype.Numeric   `json:"amount_limit"`
+	Period         NullBudgetPeriod `json:"period"`
+	StartDate      pgtype.Date      `json:"start_date"`
+	EndDate        pgtype.Date      `json:"end_date"`
+	AlertThreshold pgtype.Int4      `json:"alert_threshold"`
+	ID             pgtype.UUID      `json:"id"`
 }
 
 func (q *Queries) UpdateGroupBudget(ctx context.Context, arg UpdateGroupBudgetParams) (GroupBudget, error) {

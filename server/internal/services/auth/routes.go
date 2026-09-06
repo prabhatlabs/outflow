@@ -19,6 +19,7 @@ func AuthRouter(database *lib.DB) *chi.Mux {
 	r.Post("/login/email", s.emailMagicLinkLogin)
 	r.Get("/callback/email", s.emailMagicLinkCallback)
 
+	// session handlers
 	r.Group(func(r chi.Router) {
 		r.Use(lib.AuthMiddleware)
 

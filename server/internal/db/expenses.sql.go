@@ -67,15 +67,15 @@ RETURNING id, group_id, created_by, paid_by, category_id, amount, description, n
 `
 
 type CreateExpenseParams struct {
-	GroupID     pgtype.UUID
-	CreatedBy   pgtype.UUID
-	PaidBy      pgtype.UUID
-	CategoryID  pgtype.UUID
-	Amount      pgtype.Numeric
-	Description pgtype.Text
-	Note        pgtype.Text
-	SplitType   SplitType
-	ExpenseDate pgtype.Date
+	GroupID     pgtype.UUID    `json:"group_id"`
+	CreatedBy   pgtype.UUID    `json:"created_by"`
+	PaidBy      pgtype.UUID    `json:"paid_by"`
+	CategoryID  pgtype.UUID    `json:"category_id"`
+	Amount      pgtype.Numeric `json:"amount"`
+	Description pgtype.Text    `json:"description"`
+	Note        pgtype.Text    `json:"note"`
+	SplitType   SplitType      `json:"split_type"`
+	ExpenseDate pgtype.Date    `json:"expense_date"`
 }
 
 func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (Expense, error) {
@@ -152,8 +152,8 @@ ORDER BY expense_date DESC, created_at DESC
 `
 
 type ListExpensesByGroupAndCategoryParams struct {
-	GroupID    pgtype.UUID
-	CategoryID pgtype.UUID
+	GroupID    pgtype.UUID `json:"group_id"`
+	CategoryID pgtype.UUID `json:"category_id"`
 }
 
 func (q *Queries) ListExpensesByGroupAndCategory(ctx context.Context, arg ListExpensesByGroupAndCategoryParams) ([]Expense, error) {
@@ -317,14 +317,14 @@ RETURNING id, group_id, created_by, paid_by, category_id, amount, description, n
 `
 
 type UpdateExpenseParams struct {
-	PaidBy      pgtype.UUID
-	CategoryID  pgtype.UUID
-	Amount      pgtype.Numeric
-	Description pgtype.Text
-	Note        pgtype.Text
-	SplitType   NullSplitType
-	ExpenseDate pgtype.Date
-	ID          pgtype.UUID
+	PaidBy      pgtype.UUID    `json:"paid_by"`
+	CategoryID  pgtype.UUID    `json:"category_id"`
+	Amount      pgtype.Numeric `json:"amount"`
+	Description pgtype.Text    `json:"description"`
+	Note        pgtype.Text    `json:"note"`
+	SplitType   NullSplitType  `json:"split_type"`
+	ExpenseDate pgtype.Date    `json:"expense_date"`
+	ID          pgtype.UUID    `json:"id"`
 }
 
 func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (Expense, error) {

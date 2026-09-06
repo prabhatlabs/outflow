@@ -33,8 +33,8 @@ func (e *BudgetPeriod) Scan(src interface{}) error {
 }
 
 type NullBudgetPeriod struct {
-	BudgetPeriod BudgetPeriod
-	Valid        bool // Valid is true if BudgetPeriod is not NULL
+	BudgetPeriod BudgetPeriod `json:"budget_period"`
+	Valid        bool         `json:"valid"` // Valid is true if BudgetPeriod is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -76,8 +76,8 @@ func (e *GroupMemberRole) Scan(src interface{}) error {
 }
 
 type NullGroupMemberRole struct {
-	GroupMemberRole GroupMemberRole
-	Valid           bool // Valid is true if GroupMemberRole is not NULL
+	GroupMemberRole GroupMemberRole `json:"group_member_role"`
+	Valid           bool            `json:"valid"` // Valid is true if GroupMemberRole is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -120,8 +120,8 @@ func (e *GroupMemberStatus) Scan(src interface{}) error {
 }
 
 type NullGroupMemberStatus struct {
-	GroupMemberStatus GroupMemberStatus
-	Valid             bool // Valid is true if GroupMemberStatus is not NULL
+	GroupMemberStatus GroupMemberStatus `json:"group_member_status"`
+	Valid             bool              `json:"valid"` // Valid is true if GroupMemberStatus is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -166,8 +166,8 @@ func (e *GroupType) Scan(src interface{}) error {
 }
 
 type NullGroupType struct {
-	GroupType GroupType
-	Valid     bool // Valid is true if GroupType is not NULL
+	GroupType GroupType `json:"group_type"`
+	Valid     bool      `json:"valid"` // Valid is true if GroupType is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -211,8 +211,8 @@ func (e *InvitationStatus) Scan(src interface{}) error {
 }
 
 type NullInvitationStatus struct {
-	InvitationStatus InvitationStatus
-	Valid            bool // Valid is true if InvitationStatus is not NULL
+	InvitationStatus InvitationStatus `json:"invitation_status"`
+	Valid            bool             `json:"valid"` // Valid is true if InvitationStatus is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -253,8 +253,8 @@ func (e *LoginProvider) Scan(src interface{}) error {
 }
 
 type NullLoginProvider struct {
-	LoginProvider LoginProvider
-	Valid         bool // Valid is true if LoginProvider is not NULL
+	LoginProvider LoginProvider `json:"login_provider"`
+	Valid         bool          `json:"valid"` // Valid is true if LoginProvider is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -298,8 +298,8 @@ func (e *PaymentMethod) Scan(src interface{}) error {
 }
 
 type NullPaymentMethod struct {
-	PaymentMethod PaymentMethod
-	Valid         bool // Valid is true if PaymentMethod is not NULL
+	PaymentMethod PaymentMethod `json:"payment_method"`
+	Valid         bool          `json:"valid"` // Valid is true if PaymentMethod is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -342,8 +342,8 @@ func (e *SplitType) Scan(src interface{}) error {
 }
 
 type NullSplitType struct {
-	SplitType SplitType
-	Valid     bool // Valid is true if SplitType is not NULL
+	SplitType SplitType `json:"split_type"`
+	Valid     bool      `json:"valid"` // Valid is true if SplitType is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -365,149 +365,149 @@ func (ns NullSplitType) Value() (driver.Value, error) {
 }
 
 type Auth struct {
-	ID                pgtype.UUID
-	UserID            pgtype.UUID
-	Provider          NullLoginProvider
-	ProviderAccountID string
-	CreatedAt         pgtype.Timestamptz
-	UpdatedAt         pgtype.Timestamptz
+	ID                pgtype.UUID        `json:"id"`
+	UserID            pgtype.UUID        `json:"user_id"`
+	Provider          NullLoginProvider  `json:"provider"`
+	ProviderAccountID string             `json:"provider_account_id"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Category struct {
-	ID        pgtype.UUID
-	GroupID   pgtype.UUID
-	CreatedBy pgtype.UUID
-	Name      string
-	Icon      pgtype.Text
-	Color     string
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID        pgtype.UUID        `json:"id"`
+	GroupID   pgtype.UUID        `json:"group_id"`
+	CreatedBy pgtype.UUID        `json:"created_by"`
+	Name      string             `json:"name"`
+	Icon      pgtype.Text        `json:"icon"`
+	Color     string             `json:"color"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Expense struct {
-	ID          pgtype.UUID
-	GroupID     pgtype.UUID
-	CreatedBy   pgtype.UUID
-	PaidBy      pgtype.UUID
-	CategoryID  pgtype.UUID
-	Amount      pgtype.Numeric
-	Description pgtype.Text
-	Note        pgtype.Text
-	SplitType   SplitType
-	IsArchived  bool
-	ArchivedAt  pgtype.Timestamptz
-	ExpenseDate pgtype.Date
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
+	ID          pgtype.UUID        `json:"id"`
+	GroupID     pgtype.UUID        `json:"group_id"`
+	CreatedBy   pgtype.UUID        `json:"created_by"`
+	PaidBy      pgtype.UUID        `json:"paid_by"`
+	CategoryID  pgtype.UUID        `json:"category_id"`
+	Amount      pgtype.Numeric     `json:"amount"`
+	Description pgtype.Text        `json:"description"`
+	Note        pgtype.Text        `json:"note"`
+	SplitType   SplitType          `json:"split_type"`
+	IsArchived  bool               `json:"is_archived"`
+	ArchivedAt  pgtype.Timestamptz `json:"archived_at"`
+	ExpenseDate pgtype.Date        `json:"expense_date"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }
 
 type ExpenseSplit struct {
-	ID         pgtype.UUID
-	ExpenseID  pgtype.UUID
-	UserID     pgtype.UUID
-	AmountOwed pgtype.Numeric
-	Percentage pgtype.Numeric
-	Shares     pgtype.Numeric
-	CreatedAt  pgtype.Timestamptz
-	UpdatedAt  pgtype.Timestamptz
+	ID         pgtype.UUID        `json:"id"`
+	ExpenseID  pgtype.UUID        `json:"expense_id"`
+	UserID     pgtype.UUID        `json:"user_id"`
+	AmountOwed pgtype.Numeric     `json:"amount_owed"`
+	Percentage pgtype.Numeric     `json:"percentage"`
+	Shares     pgtype.Numeric     `json:"shares"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Group struct {
-	ID              pgtype.UUID
-	Name            string
-	Description     pgtype.Text
-	AvatarUrl       pgtype.Text
-	Type            GroupType
-	DefaultCurrency string
-	CreatedBy       pgtype.UUID
-	IsArchived      bool
-	ArchivedAt      pgtype.Timestamptz
-	CreatedAt       pgtype.Timestamptz
-	UpdatedAt       pgtype.Timestamptz
+	ID              pgtype.UUID        `json:"id"`
+	Name            string             `json:"name"`
+	Description     pgtype.Text        `json:"description"`
+	AvatarUrl       pgtype.Text        `json:"avatar_url"`
+	Type            GroupType          `json:"type"`
+	DefaultCurrency string             `json:"default_currency"`
+	CreatedBy       pgtype.UUID        `json:"created_by"`
+	IsArchived      bool               `json:"is_archived"`
+	ArchivedAt      pgtype.Timestamptz `json:"archived_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }
 
 type GroupBudget struct {
-	ID             pgtype.UUID
-	GroupID        pgtype.UUID
-	AmountLimit    pgtype.Numeric
-	Period         BudgetPeriod
-	StartDate      pgtype.Date
-	EndDate        pgtype.Date
-	AlertThreshold int32
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
+	ID             pgtype.UUID        `json:"id"`
+	GroupID        pgtype.UUID        `json:"group_id"`
+	AmountLimit    pgtype.Numeric     `json:"amount_limit"`
+	Period         BudgetPeriod       `json:"period"`
+	StartDate      pgtype.Date        `json:"start_date"`
+	EndDate        pgtype.Date        `json:"end_date"`
+	AlertThreshold int32              `json:"alert_threshold"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
 type GroupMember struct {
-	ID        pgtype.UUID
-	UserID    pgtype.UUID
-	GroupID   pgtype.UUID
-	Role      GroupMemberRole
-	Status    GroupMemberStatus
-	InvitedBy pgtype.UUID
-	JoinedAt  pgtype.Timestamptz
-	LeftAt    pgtype.Timestamptz
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID        pgtype.UUID        `json:"id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	GroupID   pgtype.UUID        `json:"group_id"`
+	Role      GroupMemberRole    `json:"role"`
+	Status    GroupMemberStatus  `json:"status"`
+	InvitedBy pgtype.UUID        `json:"invited_by"`
+	JoinedAt  pgtype.Timestamptz `json:"joined_at"`
+	LeftAt    pgtype.Timestamptz `json:"left_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Invitation struct {
-	ID         pgtype.UUID
-	GroupID    pgtype.UUID
-	InvitedBy  pgtype.UUID
-	Email      string
-	TokenHash  string
-	Status     InvitationStatus
-	ExpiresAt  pgtype.Timestamptz
-	AcceptedAt pgtype.Timestamptz
-	RejectedAt pgtype.Timestamptz
-	CreatedAt  pgtype.Timestamptz
-	UpdatedAt  pgtype.Timestamptz
+	ID         pgtype.UUID        `json:"id"`
+	GroupID    pgtype.UUID        `json:"group_id"`
+	InvitedBy  pgtype.UUID        `json:"invited_by"`
+	Email      string             `json:"email"`
+	TokenHash  string             `json:"token_hash"`
+	Status     InvitationStatus   `json:"status"`
+	ExpiresAt  pgtype.Timestamptz `json:"expires_at"`
+	AcceptedAt pgtype.Timestamptz `json:"accepted_at"`
+	RejectedAt pgtype.Timestamptz `json:"rejected_at"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
 type PersonalBudget struct {
-	ID             pgtype.UUID
-	UserID         pgtype.UUID
-	AmountLimit    pgtype.Numeric
-	Period         BudgetPeriod
-	StartDate      pgtype.Date
-	EndDate        pgtype.Date
-	AlertThreshold int32
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
+	ID             pgtype.UUID        `json:"id"`
+	UserID         pgtype.UUID        `json:"user_id"`
+	AmountLimit    pgtype.Numeric     `json:"amount_limit"`
+	Period         BudgetPeriod       `json:"period"`
+	StartDate      pgtype.Date        `json:"start_date"`
+	EndDate        pgtype.Date        `json:"end_date"`
+	AlertThreshold int32              `json:"alert_threshold"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Settlement struct {
-	ID             pgtype.UUID
-	GroupID        pgtype.UUID
-	FromUserID     pgtype.UUID
-	ToUserID       pgtype.UUID
-	Amount         pgtype.Numeric
-	PaymentMethod  PaymentMethod
-	Note           pgtype.Text
-	SettlementDate pgtype.Date
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
+	ID             pgtype.UUID        `json:"id"`
+	GroupID        pgtype.UUID        `json:"group_id"`
+	FromUserID     pgtype.UUID        `json:"from_user_id"`
+	ToUserID       pgtype.UUID        `json:"to_user_id"`
+	Amount         pgtype.Numeric     `json:"amount"`
+	PaymentMethod  PaymentMethod      `json:"payment_method"`
+	Note           pgtype.Text        `json:"note"`
+	SettlementDate pgtype.Date        `json:"settlement_date"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
 type SettlementSplit struct {
-	ID             pgtype.UUID
-	SettlementID   pgtype.UUID
-	ExpenseSplitID pgtype.UUID
-	CreatedAt      pgtype.Timestamptz
+	ID             pgtype.UUID        `json:"id"`
+	SettlementID   pgtype.UUID        `json:"settlement_id"`
+	ExpenseSplitID pgtype.UUID        `json:"expense_split_id"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
 type User struct {
-	ID              pgtype.UUID
-	Email           string
-	FirstName       string
-	LastName        pgtype.Text
-	AvatarUrl       pgtype.Text
-	IsActive        bool
-	Timezone        string
-	EmailVerifiedAt pgtype.Timestamptz
-	LastLoginMode   NullLoginProvider
-	LastLoginAt     pgtype.Timestamptz
-	CreatedAt       pgtype.Timestamptz
-	UpdatedAt       pgtype.Timestamptz
+	ID              pgtype.UUID        `json:"id"`
+	Email           string             `json:"email"`
+	FirstName       string             `json:"first_name"`
+	LastName        pgtype.Text        `json:"last_name"`
+	AvatarUrl       pgtype.Text        `json:"avatar_url"`
+	IsActive        bool               `json:"is_active"`
+	Timezone        string             `json:"timezone"`
+	EmailVerifiedAt pgtype.Timestamptz `json:"email_verified_at"`
+	LastLoginMode   NullLoginProvider  `json:"last_login_mode"`
+	LastLoginAt     pgtype.Timestamptz `json:"last_login_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }

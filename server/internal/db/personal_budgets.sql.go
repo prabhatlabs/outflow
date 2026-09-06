@@ -31,12 +31,12 @@ RETURNING id, user_id, amount_limit, period, start_date, end_date, alert_thresho
 `
 
 type CreatePersonalBudgetParams struct {
-	UserID         pgtype.UUID
-	AmountLimit    pgtype.Numeric
-	Period         BudgetPeriod
-	StartDate      pgtype.Date
-	EndDate        pgtype.Date
-	AlertThreshold int32
+	UserID         pgtype.UUID    `json:"user_id"`
+	AmountLimit    pgtype.Numeric `json:"amount_limit"`
+	Period         BudgetPeriod   `json:"period"`
+	StartDate      pgtype.Date    `json:"start_date"`
+	EndDate        pgtype.Date    `json:"end_date"`
+	AlertThreshold int32          `json:"alert_threshold"`
 }
 
 func (q *Queries) CreatePersonalBudget(ctx context.Context, arg CreatePersonalBudgetParams) (PersonalBudget, error) {
@@ -139,12 +139,12 @@ RETURNING id, user_id, amount_limit, period, start_date, end_date, alert_thresho
 `
 
 type UpdatePersonalBudgetParams struct {
-	AmountLimit    pgtype.Numeric
-	Period         NullBudgetPeriod
-	StartDate      pgtype.Date
-	EndDate        pgtype.Date
-	AlertThreshold pgtype.Int4
-	ID             pgtype.UUID
+	AmountLimit    pgtype.Numeric   `json:"amount_limit"`
+	Period         NullBudgetPeriod `json:"period"`
+	StartDate      pgtype.Date      `json:"start_date"`
+	EndDate        pgtype.Date      `json:"end_date"`
+	AlertThreshold pgtype.Int4      `json:"alert_threshold"`
+	ID             pgtype.UUID      `json:"id"`
 }
 
 func (q *Queries) UpdatePersonalBudget(ctx context.Context, arg UpdatePersonalBudgetParams) (PersonalBudget, error) {

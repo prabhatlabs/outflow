@@ -29,11 +29,11 @@ RETURNING id, group_id, created_by, name, icon, color, created_at, updated_at
 `
 
 type CreateCategoryParams struct {
-	GroupID   pgtype.UUID
-	CreatedBy pgtype.UUID
-	Name      string
-	Icon      pgtype.Text
-	Color     string
+	GroupID   pgtype.UUID `json:"group_id"`
+	CreatedBy pgtype.UUID `json:"created_by"`
+	Name      string      `json:"name"`
+	Icon      pgtype.Text `json:"icon"`
+	Color     string      `json:"color"`
 }
 
 func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error) {
@@ -92,8 +92,8 @@ SELECT id, group_id, created_by, name, icon, color, created_at, updated_at FROM 
 `
 
 type GetCategoryByNameAndGroupParams struct {
-	Name    string
-	GroupID pgtype.UUID
+	Name    string      `json:"name"`
+	GroupID pgtype.UUID `json:"group_id"`
 }
 
 func (q *Queries) GetCategoryByNameAndGroup(ctx context.Context, arg GetCategoryByNameAndGroupParams) (Category, error) {
@@ -155,10 +155,10 @@ RETURNING id, group_id, created_by, name, icon, color, created_at, updated_at
 `
 
 type UpdateCategoryParams struct {
-	Name  pgtype.Text
-	Icon  pgtype.Text
-	Color pgtype.Text
-	ID    pgtype.UUID
+	Name  pgtype.Text `json:"name"`
+	Icon  pgtype.Text `json:"icon"`
+	Color pgtype.Text `json:"color"`
+	ID    pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error) {

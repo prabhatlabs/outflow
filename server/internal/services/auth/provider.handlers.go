@@ -57,7 +57,7 @@ func (s *Service) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.createUser(ctx, createUserInput{
+	user, err := s.createUserIfNotExists(ctx, createUserIfNotExistsInput{
 		Email:             userInfo.Email,
 		FirstName:         googleFirstName(userInfo),
 		LastName:          userInfo.FamilyName,
@@ -124,7 +124,7 @@ func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := s.createUser(r.Context(), createUserInput{
+	user, err := s.createUserIfNotExists(r.Context(), createUserIfNotExistsInput{
 		Email:             email,
 		FirstName:         emailLocal(email),
 		Provider:          db.LoginProviderEmail,

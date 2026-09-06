@@ -44,14 +44,14 @@ RETURNING id, email, first_name, last_name, avatar_url, is_active, timezone, ema
 `
 
 type CreateUserParams struct {
-	Email           string
-	FirstName       string
-	LastName        pgtype.Text
-	AvatarUrl       pgtype.Text
-	Timezone        string
-	EmailVerifiedAt pgtype.Timestamptz
-	LastLoginMode   NullLoginProvider
-	LastLoginAt     pgtype.Timestamptz
+	Email           string             `json:"email"`
+	FirstName       string             `json:"first_name"`
+	LastName        pgtype.Text        `json:"last_name"`
+	AvatarUrl       pgtype.Text        `json:"avatar_url"`
+	Timezone        string             `json:"timezone"`
+	EmailVerifiedAt pgtype.Timestamptz `json:"email_verified_at"`
+	LastLoginMode   NullLoginProvider  `json:"last_login_mode"`
+	LastLoginAt     pgtype.Timestamptz `json:"last_login_at"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -164,15 +164,15 @@ RETURNING id, email, first_name, last_name, avatar_url, is_active, timezone, ema
 `
 
 type UpdateUserParams struct {
-	FirstName       pgtype.Text
-	LastName        pgtype.Text
-	AvatarUrl       pgtype.Text
-	Timezone        pgtype.Text
-	EmailVerifiedAt pgtype.Timestamptz
-	LastLoginMode   NullLoginProvider
-	LastLoginAt     pgtype.Timestamptz
-	IsActive        pgtype.Bool
-	ID              pgtype.UUID
+	FirstName       pgtype.Text        `json:"first_name"`
+	LastName        pgtype.Text        `json:"last_name"`
+	AvatarUrl       pgtype.Text        `json:"avatar_url"`
+	Timezone        pgtype.Text        `json:"timezone"`
+	EmailVerifiedAt pgtype.Timestamptz `json:"email_verified_at"`
+	LastLoginMode   NullLoginProvider  `json:"last_login_mode"`
+	LastLoginAt     pgtype.Timestamptz `json:"last_login_at"`
+	IsActive        pgtype.Bool        `json:"is_active"`
+	ID              pgtype.UUID        `json:"id"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -214,8 +214,8 @@ RETURNING id, email, first_name, last_name, avatar_url, is_active, timezone, ema
 `
 
 type UpdateUserLastLoginParams struct {
-	ID            pgtype.UUID
-	LastLoginMode NullLoginProvider
+	ID            pgtype.UUID       `json:"id"`
+	LastLoginMode NullLoginProvider `json:"last_login_mode"`
 }
 
 func (q *Queries) UpdateUserLastLogin(ctx context.Context, arg UpdateUserLastLoginParams) (User, error) {

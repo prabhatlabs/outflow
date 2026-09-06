@@ -29,11 +29,11 @@ RETURNING id, expense_id, user_id, amount_owed, percentage, shares, created_at, 
 `
 
 type CreateExpenseSplitParams struct {
-	ExpenseID  pgtype.UUID
-	UserID     pgtype.UUID
-	AmountOwed pgtype.Numeric
-	Percentage pgtype.Numeric
-	Shares     pgtype.Numeric
+	ExpenseID  pgtype.UUID    `json:"expense_id"`
+	UserID     pgtype.UUID    `json:"user_id"`
+	AmountOwed pgtype.Numeric `json:"amount_owed"`
+	Percentage pgtype.Numeric `json:"percentage"`
+	Shares     pgtype.Numeric `json:"shares"`
 }
 
 func (q *Queries) CreateExpenseSplit(ctx context.Context, arg CreateExpenseSplitParams) (ExpenseSplit, error) {
@@ -81,8 +81,8 @@ SELECT id, expense_id, user_id, amount_owed, percentage, shares, created_at, upd
 `
 
 type GetExpenseSplitByExpenseAndUserParams struct {
-	ExpenseID pgtype.UUID
-	UserID    pgtype.UUID
+	ExpenseID pgtype.UUID `json:"expense_id"`
+	UserID    pgtype.UUID `json:"user_id"`
 }
 
 func (q *Queries) GetExpenseSplitByExpenseAndUser(ctx context.Context, arg GetExpenseSplitByExpenseAndUserParams) (ExpenseSplit, error) {
@@ -197,10 +197,10 @@ RETURNING id, expense_id, user_id, amount_owed, percentage, shares, created_at, 
 `
 
 type UpdateExpenseSplitParams struct {
-	AmountOwed pgtype.Numeric
-	Percentage pgtype.Numeric
-	Shares     pgtype.Numeric
-	ID         pgtype.UUID
+	AmountOwed pgtype.Numeric `json:"amount_owed"`
+	Percentage pgtype.Numeric `json:"percentage"`
+	Shares     pgtype.Numeric `json:"shares"`
+	ID         pgtype.UUID    `json:"id"`
 }
 
 func (q *Queries) UpdateExpenseSplit(ctx context.Context, arg UpdateExpenseSplitParams) (ExpenseSplit, error) {

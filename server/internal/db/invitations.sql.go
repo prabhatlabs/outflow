@@ -82,11 +82,11 @@ RETURNING id, group_id, invited_by, email, token_hash, status, expires_at, accep
 `
 
 type CreateInvitationParams struct {
-	GroupID   pgtype.UUID
-	InvitedBy pgtype.UUID
-	Email     string
-	TokenHash string
-	ExpiresAt pgtype.Timestamptz
+	GroupID   pgtype.UUID        `json:"group_id"`
+	InvitedBy pgtype.UUID        `json:"invited_by"`
+	Email     string             `json:"email"`
+	TokenHash string             `json:"token_hash"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
 }
 
 func (q *Queries) CreateInvitation(ctx context.Context, arg CreateInvitationParams) (Invitation, error) {

@@ -1,17 +1,33 @@
 import { createBrowserRouter } from "react-router";
-import RequireAuth from "./components/require-auth";
+import RequireAuth from "./providers/require-auth";
+import AppLayout from "./layouts/AppLayout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    Component: RequireAuth,
-    children: [{ index: true, Component: Home }],
-  },
-  {
     path: "/login",
     Component: Login,
+  },
+  {
+    path: "/",
+    Component: RequireAuth,
+    children: [
+      {
+        Component: AppLayout,
+        children: [
+          {
+            index: true,
+            Component: Home,
+          },
+          {
+            path: "*",
+            Component: NotFound,
+          },
+        ],
+      },
+    ],
   },
 ]);
 

@@ -17,6 +17,7 @@ DROP INDEX IF EXISTS idx_users_id;
 DROP INDEX IF EXISTS idx_groups_created_by;
 DROP INDEX IF EXISTS idx_group_members_user_id;
 DROP INDEX IF EXISTS idx_group_members_group_id;
+DROP INDEX IF EXISTS idx_group_members_user_status;
 DROP INDEX IF EXISTS idx_invitations_group_id;
 DROP INDEX IF EXISTS idx_invitations_group_email;
 DROP INDEX IF EXISTS idx_invitations_token_hash;

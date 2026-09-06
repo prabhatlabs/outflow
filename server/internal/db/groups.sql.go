@@ -58,12 +58,12 @@ RETURNING id, name, description, avatar_url, type, default_currency, created_by,
 `
 
 type CreateGroupParams struct {
-	Name            string
-	Description     pgtype.Text
-	AvatarUrl       pgtype.Text
-	Type            GroupType
-	DefaultCurrency string
-	CreatedBy       pgtype.UUID
+	Name            string      `json:"name"`
+	Description     pgtype.Text `json:"description"`
+	AvatarUrl       pgtype.Text `json:"avatar_url"`
+	Type            GroupType   `json:"type"`
+	DefaultCurrency string      `json:"default_currency"`
+	CreatedBy       pgtype.UUID `json:"created_by"`
 }
 
 func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error) {
@@ -202,12 +202,12 @@ RETURNING id, name, description, avatar_url, type, default_currency, created_by,
 `
 
 type UpdateGroupParams struct {
-	Name            pgtype.Text
-	Description     pgtype.Text
-	AvatarUrl       pgtype.Text
-	Type            NullGroupType
-	DefaultCurrency pgtype.Text
-	ID              pgtype.UUID
+	Name            pgtype.Text   `json:"name"`
+	Description     pgtype.Text   `json:"description"`
+	AvatarUrl       pgtype.Text   `json:"avatar_url"`
+	Type            NullGroupType `json:"type"`
+	DefaultCurrency pgtype.Text   `json:"default_currency"`
+	ID              pgtype.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateGroup(ctx context.Context, arg UpdateGroupParams) (Group, error) {
