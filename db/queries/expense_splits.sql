@@ -5,10 +5,12 @@ SELECT * FROM expense_splits WHERE id = $1;
 SELECT * FROM expense_splits WHERE expense_id = $1 AND user_id = $2;
 
 -- name: ListExpenseSplitsByExpenseID :many
-SELECT * FROM expense_splits WHERE expense_id = $1 ORDER BY created_at ASC;
+SELECT * FROM expense_splits WHERE expense_id = $1 ORDER BY created_at ASC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: ListExpenseSplitsByUserID :many
-SELECT * FROM expense_splits WHERE user_id = $1 ORDER BY created_at DESC;
+SELECT * FROM expense_splits WHERE user_id = $1 ORDER BY created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateExpenseSplit :one
 INSERT INTO expense_splits (

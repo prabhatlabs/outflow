@@ -50,7 +50,12 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	members, err := s.db.Q.ListGroupMembersWithUser(r.Context(), lib.PGUUID(groupID))
+	limit, offset := lib.ParsePagination(r)
+	members, err := s.db.Q.ListGroupMembersWithUser(r.Context(), db.ListGroupMembersWithUserParams{
+		GroupID:    lib.PGUUID(groupID),
+		PageLimit:  limit,
+		PageOffset: offset,
+	})
 	if err != nil {
 		response.InternalServerError(w, "Failed to fetch members")
 		return

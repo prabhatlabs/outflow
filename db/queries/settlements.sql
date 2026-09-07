@@ -4,12 +4,14 @@ SELECT * FROM settlements WHERE id = $1;
 -- name: ListSettlementsByGroupID :many
 SELECT * FROM settlements
 WHERE group_id = $1
-ORDER BY settlement_date DESC, created_at DESC;
+ORDER BY settlement_date DESC, created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: ListSettlementsByGroupAndUser :many
 SELECT * FROM settlements
 WHERE group_id = $1 AND (from_user_id = $2 OR to_user_id = $2)
-ORDER BY settlement_date DESC, created_at DESC;
+ORDER BY settlement_date DESC, created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateSettlement :one
 INSERT INTO settlements (

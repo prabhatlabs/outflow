@@ -45,6 +45,8 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	limit, offset := lib.ParsePagination(r)
+
 	var (
 		settlements []db.Settlement
 		err         error
@@ -53,9 +55,15 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		settlements, err = s.db.Q.ListSettlementsByGroupAndUser(r.Context(), db.ListSettlementsByGroupAndUserParams{
 			GroupID:    lib.PGUUID(groupID),
 			FromUserID: uid,
+			PageLimit:  limit,
+			PageOffset: offset,
 		})
 	} else {
-		settlements, err = s.db.Q.ListSettlementsByGroupID(r.Context(), lib.PGUUID(groupID))
+		settlements, err = s.db.Q.ListSettlementsByGroupID(r.Context(), db.ListSettlementsByGroupIDParams{
+			GroupID:    lib.PGUUID(groupID),
+			PageLimit:  limit,
+			PageOffset: offset,
+		})
 	}
 	if err != nil {
 		response.InternalServerError(w, "Failed to fetch settlements")
@@ -181,7 +189,11 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out.Splits, _ = s.db.Q.ListSettlementSplitsBySettlementID(r.Context(), out.Settlement.ID)
+	out.Splits, _ = s.db.Q.ListSettlementSplitsBySettlementID(r.Context(), db.ListSettlementSplitsBySettlementIDParams{
+		SettlementID: out.Settlement.ID,
+		PageLimit:    50,
+		PageOffset:   0,
+	})
 
 	response.Created(w, "Settlement created successfully", out)
 }
@@ -210,7 +222,12 @@ func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	splits, _ := s.db.Q.ListSettlementSplitsBySettlementID(r.Context(), settlementID)
+	limit, offset := lib.ParsePagination(r)
+	splits, _ := s.db.Q.ListSettlementSplitsBySettlementID(r.Context(), db.ListSettlementSplitsBySettlementIDParams{
+		SettlementID: settlementID,
+		PageLimit:    limit,
+		PageOffset:   offset,
+	})
 	out := settlementWithSplits{Settlement: settlement, Splits: splits}
 	if out.Splits == nil {
 		out.Splits = []db.SettlementSplit{}

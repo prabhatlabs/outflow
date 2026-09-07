@@ -31,7 +31,14 @@ FROM group_members gm
 JOIN users u ON u.id = gm.user_id
 WHERE gm.group_id = $1
 ORDER BY gm.created_at ASC
+LIMIT $3 OFFSET $2
 `
+
+type ListGroupMembersWithUserParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
 
 type ListGroupMembersWithUserRow struct {
 	ID        pgtype.UUID        `json:"id"`
@@ -50,8 +57,8 @@ type ListGroupMembersWithUserRow struct {
 	AvatarUrl pgtype.Text        `json:"avatar_url"`
 }
 
-func (q *Queries) ListGroupMembersWithUser(ctx context.Context, groupID pgtype.UUID) ([]ListGroupMembersWithUserRow, error) {
-	rows, err := q.db.Query(ctx, listGroupMembersWithUser, groupID)
+func (q *Queries) ListGroupMembersWithUser(ctx context.Context, arg ListGroupMembersWithUserParams) ([]ListGroupMembersWithUserRow, error) {
+	rows, err := q.db.Query(ctx, listGroupMembersWithUser, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

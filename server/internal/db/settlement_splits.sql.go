@@ -75,10 +75,17 @@ func (q *Queries) GetSettlementSplitByID(ctx context.Context, id pgtype.UUID) (S
 
 const listSettlementSplitsByExpenseSplitID = `-- name: ListSettlementSplitsByExpenseSplitID :many
 SELECT id, settlement_id, expense_split_id, created_at FROM settlement_splits WHERE expense_split_id = $1 ORDER BY created_at ASC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListSettlementSplitsByExpenseSplitID(ctx context.Context, expenseSplitID pgtype.UUID) ([]SettlementSplit, error) {
-	rows, err := q.db.Query(ctx, listSettlementSplitsByExpenseSplitID, expenseSplitID)
+type ListSettlementSplitsByExpenseSplitIDParams struct {
+	ExpenseSplitID pgtype.UUID `json:"expense_split_id"`
+	PageOffset     int32       `json:"page_offset"`
+	PageLimit      int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListSettlementSplitsByExpenseSplitID(ctx context.Context, arg ListSettlementSplitsByExpenseSplitIDParams) ([]SettlementSplit, error) {
+	rows, err := q.db.Query(ctx, listSettlementSplitsByExpenseSplitID, arg.ExpenseSplitID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -104,10 +111,17 @@ func (q *Queries) ListSettlementSplitsByExpenseSplitID(ctx context.Context, expe
 
 const listSettlementSplitsBySettlementID = `-- name: ListSettlementSplitsBySettlementID :many
 SELECT id, settlement_id, expense_split_id, created_at FROM settlement_splits WHERE settlement_id = $1 ORDER BY created_at ASC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListSettlementSplitsBySettlementID(ctx context.Context, settlementID pgtype.UUID) ([]SettlementSplit, error) {
-	rows, err := q.db.Query(ctx, listSettlementSplitsBySettlementID, settlementID)
+type ListSettlementSplitsBySettlementIDParams struct {
+	SettlementID pgtype.UUID `json:"settlement_id"`
+	PageOffset   int32       `json:"page_offset"`
+	PageLimit    int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListSettlementSplitsBySettlementID(ctx context.Context, arg ListSettlementSplitsBySettlementIDParams) ([]SettlementSplit, error) {
+	rows, err := q.db.Query(ctx, listSettlementSplitsBySettlementID, arg.SettlementID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

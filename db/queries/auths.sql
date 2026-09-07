@@ -8,7 +8,8 @@ SELECT * FROM auths WHERE provider = $1 AND provider_account_id = $2;
 SELECT * FROM auths WHERE user_id = $1 AND provider = $2;
 
 -- name: ListAuthsByUserID :many
-SELECT * FROM auths WHERE user_id = $1 ORDER BY created_at DESC;
+SELECT * FROM auths WHERE user_id = $1 ORDER BY created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateAuth :one
 INSERT INTO auths (

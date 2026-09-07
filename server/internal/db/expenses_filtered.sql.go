@@ -20,6 +20,7 @@ WHERE group_id = $1
   AND ($5::date IS NULL OR expense_date <= $5)
   AND ($6::bool OR is_archived = FALSE)
 ORDER BY expense_date DESC, created_at DESC
+LIMIT $8 OFFSET $7
 `
 
 type ListExpensesByGroupFilteredParams struct {
@@ -29,6 +30,8 @@ type ListExpensesByGroupFilteredParams struct {
 	FromDate        pgtype.Date `json:"from_date"`
 	ToDate          pgtype.Date `json:"to_date"`
 	IncludeArchived pgtype.Bool `json:"include_archived"`
+	PageOffset      int32       `json:"page_offset"`
+	PageLimit       int32       `json:"page_limit"`
 }
 
 func (q *Queries) ListExpensesByGroupFiltered(ctx context.Context, arg ListExpensesByGroupFilteredParams) ([]Expense, error) {
@@ -39,6 +42,8 @@ func (q *Queries) ListExpensesByGroupFiltered(ctx context.Context, arg ListExpen
 		arg.FromDate,
 		arg.ToDate,
 		arg.IncludeArchived,
+		arg.PageOffset,
+		arg.PageLimit,
 	)
 	if err != nil {
 		return nil, err

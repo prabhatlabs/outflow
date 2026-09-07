@@ -114,10 +114,17 @@ func (q *Queries) GetCategoryByNameAndGroup(ctx context.Context, arg GetCategory
 
 const listCategoriesByGroupID = `-- name: ListCategoriesByGroupID :many
 SELECT id, group_id, created_by, name, icon, color, created_at, updated_at FROM categories WHERE group_id = $1 ORDER BY name ASC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListCategoriesByGroupID(ctx context.Context, groupID pgtype.UUID) ([]Category, error) {
-	rows, err := q.db.Query(ctx, listCategoriesByGroupID, groupID)
+type ListCategoriesByGroupIDParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListCategoriesByGroupID(ctx context.Context, arg ListCategoriesByGroupIDParams) ([]Category, error) {
+	rows, err := q.db.Query(ctx, listCategoriesByGroupID, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

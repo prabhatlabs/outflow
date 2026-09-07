@@ -31,7 +31,12 @@ func parseGroupType(s string) (db.GroupType, bool) {
 
 func (s *Service) allHandler(w http.ResponseWriter, r *http.Request) {
 	userID := lib.UserIDFromContextWithUnauthorizedErr(r.Context(), w)
-	groups, err := s.db.Q.ListGroupsByUserID(r.Context(), lib.PGUUID(userID))
+	limit, offset := lib.ParsePagination(r)
+	groups, err := s.db.Q.ListGroupsByUserID(r.Context(), db.ListGroupsByUserIDParams{
+		UserID:     lib.PGUUID(userID),
+		PageLimit:  limit,
+		PageOffset: offset,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -247,7 +252,12 @@ func (s *Service) balancesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := s.db.Q.ListGroupBalances(r.Context(), lib.PGUUID(groupID))
+	limit, offset := lib.ParsePagination(r)
+	rows, err := s.db.Q.ListGroupBalances(r.Context(), db.ListGroupBalancesParams{
+		GroupID:    lib.PGUUID(groupID),
+		PageLimit:  limit,
+		PageOffset: offset,
+	})
 	if err != nil {
 		response.InternalServerError(w, "Failed to compute balances")
 		return

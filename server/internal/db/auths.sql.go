@@ -142,10 +142,17 @@ func (q *Queries) GetAuthByUserAndProvider(ctx context.Context, arg GetAuthByUse
 
 const listAuthsByUserID = `-- name: ListAuthsByUserID :many
 SELECT id, user_id, provider, provider_account_id, created_at, updated_at FROM auths WHERE user_id = $1 ORDER BY created_at DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListAuthsByUserID(ctx context.Context, userID pgtype.UUID) ([]Auth, error) {
-	rows, err := q.db.Query(ctx, listAuthsByUserID, userID)
+type ListAuthsByUserIDParams struct {
+	UserID     pgtype.UUID `json:"user_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListAuthsByUserID(ctx context.Context, arg ListAuthsByUserIDParams) ([]Auth, error) {
+	rows, err := q.db.Query(ctx, listAuthsByUserID, arg.UserID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

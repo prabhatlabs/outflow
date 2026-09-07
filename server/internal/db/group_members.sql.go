@@ -172,15 +172,23 @@ func (q *Queries) LeaveGroupMember(ctx context.Context, id pgtype.UUID) (GroupMe
 
 const listGroupMembersByGroupAndStatus = `-- name: ListGroupMembersByGroupAndStatus :many
 SELECT id, user_id, group_id, role, status, invited_by, joined_at, left_at, created_at, updated_at FROM group_members WHERE group_id = $1 AND status = $2 ORDER BY created_at ASC
+LIMIT $4 OFFSET $3
 `
 
 type ListGroupMembersByGroupAndStatusParams struct {
-	GroupID pgtype.UUID       `json:"group_id"`
-	Status  GroupMemberStatus `json:"status"`
+	GroupID    pgtype.UUID       `json:"group_id"`
+	Status     GroupMemberStatus `json:"status"`
+	PageOffset int32             `json:"page_offset"`
+	PageLimit  int32             `json:"page_limit"`
 }
 
 func (q *Queries) ListGroupMembersByGroupAndStatus(ctx context.Context, arg ListGroupMembersByGroupAndStatusParams) ([]GroupMember, error) {
-	rows, err := q.db.Query(ctx, listGroupMembersByGroupAndStatus, arg.GroupID, arg.Status)
+	rows, err := q.db.Query(ctx, listGroupMembersByGroupAndStatus,
+		arg.GroupID,
+		arg.Status,
+		arg.PageOffset,
+		arg.PageLimit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -212,10 +220,17 @@ func (q *Queries) ListGroupMembersByGroupAndStatus(ctx context.Context, arg List
 
 const listGroupMembersByGroupID = `-- name: ListGroupMembersByGroupID :many
 SELECT id, user_id, group_id, role, status, invited_by, joined_at, left_at, created_at, updated_at FROM group_members WHERE group_id = $1 ORDER BY created_at ASC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListGroupMembersByGroupID(ctx context.Context, groupID pgtype.UUID) ([]GroupMember, error) {
-	rows, err := q.db.Query(ctx, listGroupMembersByGroupID, groupID)
+type ListGroupMembersByGroupIDParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListGroupMembersByGroupID(ctx context.Context, arg ListGroupMembersByGroupIDParams) ([]GroupMember, error) {
+	rows, err := q.db.Query(ctx, listGroupMembersByGroupID, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

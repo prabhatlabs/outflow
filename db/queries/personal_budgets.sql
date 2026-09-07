@@ -2,7 +2,8 @@
 SELECT * FROM personal_budgets WHERE id = $1;
 
 -- name: ListPersonalBudgetsByUserID :many
-SELECT * FROM personal_budgets WHERE user_id = $1 ORDER BY start_date DESC;
+SELECT * FROM personal_budgets WHERE user_id = $1 ORDER BY start_date DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreatePersonalBudget :one
 INSERT INTO personal_budgets (

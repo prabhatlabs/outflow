@@ -123,10 +123,17 @@ func (q *Queries) GetExpenseSplitByID(ctx context.Context, id pgtype.UUID) (Expe
 
 const listExpenseSplitsByExpenseID = `-- name: ListExpenseSplitsByExpenseID :many
 SELECT id, expense_id, user_id, amount_owed, percentage, shares, created_at, updated_at FROM expense_splits WHERE expense_id = $1 ORDER BY created_at ASC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListExpenseSplitsByExpenseID(ctx context.Context, expenseID pgtype.UUID) ([]ExpenseSplit, error) {
-	rows, err := q.db.Query(ctx, listExpenseSplitsByExpenseID, expenseID)
+type ListExpenseSplitsByExpenseIDParams struct {
+	ExpenseID  pgtype.UUID `json:"expense_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListExpenseSplitsByExpenseID(ctx context.Context, arg ListExpenseSplitsByExpenseIDParams) ([]ExpenseSplit, error) {
+	rows, err := q.db.Query(ctx, listExpenseSplitsByExpenseID, arg.ExpenseID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -156,10 +163,17 @@ func (q *Queries) ListExpenseSplitsByExpenseID(ctx context.Context, expenseID pg
 
 const listExpenseSplitsByUserID = `-- name: ListExpenseSplitsByUserID :many
 SELECT id, expense_id, user_id, amount_owed, percentage, shares, created_at, updated_at FROM expense_splits WHERE user_id = $1 ORDER BY created_at DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListExpenseSplitsByUserID(ctx context.Context, userID pgtype.UUID) ([]ExpenseSplit, error) {
-	rows, err := q.db.Query(ctx, listExpenseSplitsByUserID, userID)
+type ListExpenseSplitsByUserIDParams struct {
+	UserID     pgtype.UUID `json:"user_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListExpenseSplitsByUserID(ctx context.Context, arg ListExpenseSplitsByUserIDParams) ([]ExpenseSplit, error) {
+	rows, err := q.db.Query(ctx, listExpenseSplitsByUserID, arg.UserID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

@@ -41,7 +41,14 @@ FROM group_members gm
 JOIN users u ON u.id = gm.user_id
 WHERE gm.group_id = $1 AND gm.status = 'active'
 ORDER BY u.first_name ASC
+LIMIT $3 OFFSET $2
 `
+
+type ListGroupBalancesParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
 
 type ListGroupBalancesRow struct {
 	UserID      pgtype.UUID    `json:"user_id"`
@@ -59,8 +66,8 @@ type ListGroupBalancesRow struct {
 //	paid    = sum of expenses they paid for
 //	settled = net settlements (received - sent)
 //	net     = owed - paid - settled... computed in Go; here raw components
-func (q *Queries) ListGroupBalances(ctx context.Context, groupID pgtype.UUID) ([]ListGroupBalancesRow, error) {
-	rows, err := q.db.Query(ctx, listGroupBalances, groupID)
+func (q *Queries) ListGroupBalances(ctx context.Context, arg ListGroupBalancesParams) ([]ListGroupBalancesRow, error) {
+	rows, err := q.db.Query(ctx, listGroupBalances, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

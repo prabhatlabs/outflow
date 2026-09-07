@@ -152,7 +152,11 @@ func (s *Service) fetchExpenseWithSplits(ctx context.Context, expenseID pgtype.U
 	if err != nil {
 		return expenseWithSplits{}, err
 	}
-	splits, err := s.db.Q.ListExpenseSplitsByExpenseID(ctx, expenseID)
+	splits, err := s.db.Q.ListExpenseSplitsByExpenseID(ctx, db.ListExpenseSplitsByExpenseIDParams{
+		ExpenseID:  expenseID,
+		PageLimit:  50,
+		PageOffset: 0,
+	})
 	if err != nil {
 		return expenseWithSplits{}, err
 	}
@@ -165,7 +169,12 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := db.ListExpensesByGroupFilteredParams{GroupID: lib.PGUUID(groupID)}
+	limit, offset := lib.ParsePagination(r)
+	params := db.ListExpensesByGroupFilteredParams{
+		GroupID:    lib.PGUUID(groupID),
+		PageLimit:  limit,
+		PageOffset: offset,
+	}
 	if cat, ok := lib.UUIDFromQuery(r, "category_id"); ok {
 		params.CategoryID = cat
 	}
@@ -232,7 +241,11 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out.Splits, err = s.db.Q.ListExpenseSplitsByExpenseID(r.Context(), out.Expense.ID)
+	out.Splits, err = s.db.Q.ListExpenseSplitsByExpenseID(r.Context(), db.ListExpenseSplitsByExpenseIDParams{
+		ExpenseID:  out.Expense.ID,
+		PageLimit:  50,
+		PageOffset: 0,
+	})
 	if err != nil {
 		out.Splits = []db.ExpenseSplit{}
 	}
@@ -503,7 +516,11 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 	} else if in.Amount != 0 {
 		// amount changed without new splits: recompute existing splits so the
 		// books stay balanced
-		old, err := s.db.Q.ListExpenseSplitsByExpenseID(r.Context(), expenseID)
+		old, err := s.db.Q.ListExpenseSplitsByExpenseID(r.Context(), db.ListExpenseSplitsByExpenseIDParams{
+			ExpenseID:  expenseID,
+			PageLimit:  50,
+			PageOffset: 0,
+		})
 		if err != nil {
 			response.InternalServerError(w, "Failed to load splits")
 			return

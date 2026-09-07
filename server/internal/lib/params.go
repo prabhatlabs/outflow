@@ -2,6 +2,7 @@ package lib
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -19,6 +20,30 @@ func UUIDParamFromRequest(r *http.Request, w http.ResponseWriter, param string) 
 		return pgtype.UUID{}, false
 	}
 	return PGUUID(id), true
+}
+
+// ParsePagination reads ?limit=&offset= with safe defaults: limit 20
+// (clamped to [1, 50]) and offset >= 0.
+func ParsePagination(r *http.Request) (limit, offset int32) {
+	limit = 20
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil {
+			limit = int32(v)
+		}
+	}
+	if limit < 1 {
+		limit = 1
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	if raw := r.URL.Query().Get("offset"); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
+			offset = int32(v)
+		}
+	}
+	return limit, offset
 }
 
 // UUIDFromQuery parses a query-string UUID. Absent values return ok=false

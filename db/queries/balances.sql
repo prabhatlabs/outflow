@@ -32,4 +32,5 @@ SELECT
 FROM group_members gm
 JOIN users u ON u.id = gm.user_id
 WHERE gm.group_id = $1 AND gm.status = 'active'
-ORDER BY u.first_name ASC;
+ORDER BY u.first_name ASC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);

@@ -2,7 +2,8 @@
 SELECT * FROM group_budgets WHERE id = $1;
 
 -- name: ListGroupBudgetsByGroupID :many
-SELECT * FROM group_budgets WHERE group_id = $1 ORDER BY start_date DESC;
+SELECT * FROM group_budgets WHERE group_id = $1 ORDER BY start_date DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateGroupBudget :one
 INSERT INTO group_budgets (

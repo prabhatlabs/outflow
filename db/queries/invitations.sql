@@ -5,12 +5,14 @@ SELECT * FROM invitations WHERE id = $1;
 SELECT * FROM invitations WHERE token_hash = $1;
 
 -- name: ListInvitationsByGroupID :many
-SELECT * FROM invitations WHERE group_id = $1 ORDER BY created_at DESC;
+SELECT * FROM invitations WHERE group_id = $1 ORDER BY created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: ListPendingInvitationsByEmail :many
 SELECT * FROM invitations
 WHERE LOWER(email) = LOWER($1) AND status = 'pending'
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateInvitation :one
 INSERT INTO invitations (

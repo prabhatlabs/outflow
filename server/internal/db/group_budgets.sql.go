@@ -95,10 +95,17 @@ func (q *Queries) GetGroupBudgetByID(ctx context.Context, id pgtype.UUID) (Group
 
 const listGroupBudgetsByGroupID = `-- name: ListGroupBudgetsByGroupID :many
 SELECT id, group_id, amount_limit, period, start_date, end_date, alert_threshold, created_at, updated_at FROM group_budgets WHERE group_id = $1 ORDER BY start_date DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListGroupBudgetsByGroupID(ctx context.Context, groupID pgtype.UUID) ([]GroupBudget, error) {
-	rows, err := q.db.Query(ctx, listGroupBudgetsByGroupID, groupID)
+type ListGroupBudgetsByGroupIDParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListGroupBudgetsByGroupID(ctx context.Context, arg ListGroupBudgetsByGroupIDParams) ([]GroupBudget, error) {
+	rows, err := q.db.Query(ctx, listGroupBudgetsByGroupID, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

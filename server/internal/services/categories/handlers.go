@@ -19,7 +19,12 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categories, err := s.db.Q.ListCategoriesByGroupID(r.Context(), lib.PGUUID(groupID))
+	limit, offset := lib.ParsePagination(r)
+	categories, err := s.db.Q.ListCategoriesByGroupID(r.Context(), db.ListCategoriesByGroupIDParams{
+		GroupID:    lib.PGUUID(groupID),
+		PageLimit:  limit,
+		PageOffset: offset,
+	})
 	if err != nil {
 		response.InternalServerError(w, "Failed to fetch categories")
 		return

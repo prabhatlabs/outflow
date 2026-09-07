@@ -103,15 +103,23 @@ const listSettlementsByGroupAndUser = `-- name: ListSettlementsByGroupAndUser :m
 SELECT id, group_id, from_user_id, to_user_id, amount, payment_method, note, settlement_date, created_at, updated_at FROM settlements
 WHERE group_id = $1 AND (from_user_id = $2 OR to_user_id = $2)
 ORDER BY settlement_date DESC, created_at DESC
+LIMIT $4 OFFSET $3
 `
 
 type ListSettlementsByGroupAndUserParams struct {
 	GroupID    pgtype.UUID `json:"group_id"`
 	FromUserID pgtype.UUID `json:"from_user_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
 }
 
 func (q *Queries) ListSettlementsByGroupAndUser(ctx context.Context, arg ListSettlementsByGroupAndUserParams) ([]Settlement, error) {
-	rows, err := q.db.Query(ctx, listSettlementsByGroupAndUser, arg.GroupID, arg.FromUserID)
+	rows, err := q.db.Query(ctx, listSettlementsByGroupAndUser,
+		arg.GroupID,
+		arg.FromUserID,
+		arg.PageOffset,
+		arg.PageLimit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -145,10 +153,17 @@ const listSettlementsByGroupID = `-- name: ListSettlementsByGroupID :many
 SELECT id, group_id, from_user_id, to_user_id, amount, payment_method, note, settlement_date, created_at, updated_at FROM settlements
 WHERE group_id = $1
 ORDER BY settlement_date DESC, created_at DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListSettlementsByGroupID(ctx context.Context, groupID pgtype.UUID) ([]Settlement, error) {
-	rows, err := q.db.Query(ctx, listSettlementsByGroupID, groupID)
+type ListSettlementsByGroupIDParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListSettlementsByGroupID(ctx context.Context, arg ListSettlementsByGroupIDParams) ([]Settlement, error) {
+	rows, err := q.db.Query(ctx, listSettlementsByGroupID, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

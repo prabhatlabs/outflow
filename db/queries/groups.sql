@@ -5,7 +5,8 @@ SELECT * FROM groups WHERE id = $1;
 SELECT g.* FROM groups g
 INNER JOIN group_members gm ON gm.group_id = g.id
 WHERE gm.user_id = $1 AND gm.status = 'active'
-ORDER BY g.created_at DESC;
+ORDER BY g.created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateGroup :one
 INSERT INTO groups (

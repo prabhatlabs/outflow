@@ -17,4 +17,5 @@ SELECT
 FROM group_members gm
 JOIN users u ON u.id = gm.user_id
 WHERE gm.group_id = $1
-ORDER BY gm.created_at ASC;
+ORDER BY gm.created_at ASC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);

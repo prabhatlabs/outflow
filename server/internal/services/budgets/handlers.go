@@ -175,7 +175,12 @@ func (s *Service) groupListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	budgets, err := s.db.Q.ListGroupBudgetsByGroupID(r.Context(), lib.PGUUID(groupID))
+	limit, offset := lib.ParsePagination(r)
+	budgets, err := s.db.Q.ListGroupBudgetsByGroupID(r.Context(), db.ListGroupBudgetsByGroupIDParams{
+		GroupID:    lib.PGUUID(groupID),
+		PageLimit:  limit,
+		PageOffset: offset,
+	})
 	if err != nil {
 		response.InternalServerError(w, "Failed to fetch budgets")
 		return
@@ -323,7 +328,12 @@ func (s *Service) groupDeleteHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) personalListHandler(w http.ResponseWriter, r *http.Request) {
 	userID := lib.UserIDFromContextWithUnauthorizedErr(r.Context(), w)
 
-	budgets, err := s.db.Q.ListPersonalBudgetsByUserID(r.Context(), lib.PGUUID(userID))
+	limit, offset := lib.ParsePagination(r)
+	budgets, err := s.db.Q.ListPersonalBudgetsByUserID(r.Context(), db.ListPersonalBudgetsByUserIDParams{
+		UserID:     lib.PGUUID(userID),
+		PageLimit:  limit,
+		PageOffset: offset,
+	})
 	if err != nil {
 		response.InternalServerError(w, "Failed to fetch budgets")
 		return

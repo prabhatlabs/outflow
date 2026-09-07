@@ -149,15 +149,23 @@ const listExpensesByGroupAndCategory = `-- name: ListExpensesByGroupAndCategory 
 SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at FROM expenses
 WHERE group_id = $1 AND category_id = $2 AND is_archived = FALSE
 ORDER BY expense_date DESC, created_at DESC
+LIMIT $4 OFFSET $3
 `
 
 type ListExpensesByGroupAndCategoryParams struct {
 	GroupID    pgtype.UUID `json:"group_id"`
 	CategoryID pgtype.UUID `json:"category_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
 }
 
 func (q *Queries) ListExpensesByGroupAndCategory(ctx context.Context, arg ListExpensesByGroupAndCategoryParams) ([]Expense, error) {
-	rows, err := q.db.Query(ctx, listExpensesByGroupAndCategory, arg.GroupID, arg.CategoryID)
+	rows, err := q.db.Query(ctx, listExpensesByGroupAndCategory,
+		arg.GroupID,
+		arg.CategoryID,
+		arg.PageOffset,
+		arg.PageLimit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -195,10 +203,17 @@ const listExpensesByGroupID = `-- name: ListExpensesByGroupID :many
 SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at FROM expenses
 WHERE group_id = $1 AND is_archived = FALSE
 ORDER BY expense_date DESC, created_at DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListExpensesByGroupID(ctx context.Context, groupID pgtype.UUID) ([]Expense, error) {
-	rows, err := q.db.Query(ctx, listExpensesByGroupID, groupID)
+type ListExpensesByGroupIDParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListExpensesByGroupID(ctx context.Context, arg ListExpensesByGroupIDParams) ([]Expense, error) {
+	rows, err := q.db.Query(ctx, listExpensesByGroupID, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -236,10 +251,17 @@ const listExpensesByPaidBy = `-- name: ListExpensesByPaidBy :many
 SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at FROM expenses
 WHERE paid_by = $1 AND is_archived = FALSE
 ORDER BY expense_date DESC, created_at DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListExpensesByPaidBy(ctx context.Context, paidBy pgtype.UUID) ([]Expense, error) {
-	rows, err := q.db.Query(ctx, listExpensesByPaidBy, paidBy)
+type ListExpensesByPaidByParams struct {
+	PaidBy     pgtype.UUID `json:"paid_by"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListExpensesByPaidBy(ctx context.Context, arg ListExpensesByPaidByParams) ([]Expense, error) {
+	rows, err := q.db.Query(ctx, listExpensesByPaidBy, arg.PaidBy, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

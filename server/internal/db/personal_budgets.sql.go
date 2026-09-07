@@ -95,10 +95,17 @@ func (q *Queries) GetPersonalBudgetByID(ctx context.Context, id pgtype.UUID) (Pe
 
 const listPersonalBudgetsByUserID = `-- name: ListPersonalBudgetsByUserID :many
 SELECT id, user_id, amount_limit, period, start_date, end_date, alert_threshold, created_at, updated_at FROM personal_budgets WHERE user_id = $1 ORDER BY start_date DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListPersonalBudgetsByUserID(ctx context.Context, userID pgtype.UUID) ([]PersonalBudget, error) {
-	rows, err := q.db.Query(ctx, listPersonalBudgetsByUserID, userID)
+type ListPersonalBudgetsByUserIDParams struct {
+	UserID     pgtype.UUID `json:"user_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListPersonalBudgetsByUserID(ctx context.Context, arg ListPersonalBudgetsByUserIDParams) ([]PersonalBudget, error) {
+	rows, err := q.db.Query(ctx, listPersonalBudgetsByUserID, arg.UserID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

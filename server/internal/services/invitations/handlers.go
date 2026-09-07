@@ -20,7 +20,7 @@ import (
 	"github.com/prabhatlabs/outflow/internal/lib/response"
 )
 
-const defaultExpiryDays = 7
+const defaultExpiryHours = 24
 
 // generateToken returns (raw, sha256hex). Only the hash is stored; the raw
 // value goes into the emailed link.
@@ -57,7 +57,12 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invitations, err := s.db.Q.ListInvitationsByGroupID(r.Context(), lib.PGUUID(groupID))
+	limit, offset := lib.ParsePagination(r)
+	invitations, err := s.db.Q.ListInvitationsByGroupID(r.Context(), db.ListInvitationsByGroupIDParams{
+		GroupID:    lib.PGUUID(groupID),
+		PageLimit:  limit,
+		PageOffset: offset,
+	})
 	if err != nil {
 		response.InternalServerError(w, "Failed to fetch invitations")
 		return
@@ -113,7 +118,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expiresAt := pgtype.Timestamptz{
-		Time:  time.Now().Add(defaultExpiryDays * 24 * time.Hour),
+		Time:  time.Now().Add(defaultExpiryHours * time.Hour),
 		Valid: true,
 	}
 
@@ -135,7 +140,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inviteURL := strings.TrimRight(lib.Envs.FRONTEND_URL, "/") + "/invitations?token=" + rawToken
-	if err := email.SendInvite(emailAddr, group.Name, displayName(inviter), inviteURL, defaultExpiryDays); err != nil {
+	if err := email.SendInvite(emailAddr, group.Name, displayName(inviter), inviteURL, defaultExpiryHours); err != nil {
 		// the invitation row stays; the inviter can resend later or share URL
 		log.Printf("invitations: send invite to %s: %v", emailAddr, err)
 	}
@@ -200,7 +205,12 @@ func (s *Service) pendingHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("invitations: expire overdue: %v", err)
 	}
 
-	pending, err := s.db.Q.ListPendingInvitationsByEmail(r.Context(), user.Email)
+	limit, offset := lib.ParsePagination(r)
+	pending, err := s.db.Q.ListPendingInvitationsByEmail(r.Context(), db.ListPendingInvitationsByEmailParams{
+		Lower:      user.Email,
+		PageLimit:  limit,
+		PageOffset: offset,
+	})
 	if err != nil {
 		response.InternalServerError(w, "Failed to fetch invitations")
 		return

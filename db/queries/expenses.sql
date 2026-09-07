@@ -4,17 +4,20 @@ SELECT * FROM expenses WHERE id = $1;
 -- name: ListExpensesByGroupID :many
 SELECT * FROM expenses
 WHERE group_id = $1 AND is_archived = FALSE
-ORDER BY expense_date DESC, created_at DESC;
+ORDER BY expense_date DESC, created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: ListExpensesByGroupAndCategory :many
 SELECT * FROM expenses
 WHERE group_id = $1 AND category_id = $2 AND is_archived = FALSE
-ORDER BY expense_date DESC, created_at DESC;
+ORDER BY expense_date DESC, created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: ListExpensesByPaidBy :many
 SELECT * FROM expenses
 WHERE paid_by = $1 AND is_archived = FALSE
-ORDER BY expense_date DESC, created_at DESC;
+ORDER BY expense_date DESC, created_at DESC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateExpense :one
 INSERT INTO expenses (

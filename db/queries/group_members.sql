@@ -5,10 +5,12 @@ SELECT * FROM group_members WHERE id = $1;
 SELECT * FROM group_members WHERE user_id = $1 AND group_id = $2;
 
 -- name: ListGroupMembersByGroupID :many
-SELECT * FROM group_members WHERE group_id = $1 ORDER BY created_at ASC;
+SELECT * FROM group_members WHERE group_id = $1 ORDER BY created_at ASC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: ListGroupMembersByGroupAndStatus :many
-SELECT * FROM group_members WHERE group_id = $1 AND status = $2 ORDER BY created_at ASC;
+SELECT * FROM group_members WHERE group_id = $1 AND status = $2 ORDER BY created_at ASC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateGroupMember :one
 INSERT INTO group_members (

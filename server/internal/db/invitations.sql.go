@@ -182,10 +182,17 @@ func (q *Queries) GetInvitationByTokenHash(ctx context.Context, tokenHash string
 
 const listInvitationsByGroupID = `-- name: ListInvitationsByGroupID :many
 SELECT id, group_id, invited_by, email, token_hash, status, expires_at, accepted_at, rejected_at, created_at, updated_at FROM invitations WHERE group_id = $1 ORDER BY created_at DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListInvitationsByGroupID(ctx context.Context, groupID pgtype.UUID) ([]Invitation, error) {
-	rows, err := q.db.Query(ctx, listInvitationsByGroupID, groupID)
+type ListInvitationsByGroupIDParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListInvitationsByGroupID(ctx context.Context, arg ListInvitationsByGroupIDParams) ([]Invitation, error) {
+	rows, err := q.db.Query(ctx, listInvitationsByGroupID, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -220,10 +227,17 @@ const listPendingInvitationsByEmail = `-- name: ListPendingInvitationsByEmail :m
 SELECT id, group_id, invited_by, email, token_hash, status, expires_at, accepted_at, rejected_at, created_at, updated_at FROM invitations
 WHERE LOWER(email) = LOWER($1) AND status = 'pending'
 ORDER BY created_at DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListPendingInvitationsByEmail(ctx context.Context, lower string) ([]Invitation, error) {
-	rows, err := q.db.Query(ctx, listPendingInvitationsByEmail, lower)
+type ListPendingInvitationsByEmailParams struct {
+	Lower      string `json:"lower"`
+	PageOffset int32  `json:"page_offset"`
+	PageLimit  int32  `json:"page_limit"`
+}
+
+func (q *Queries) ListPendingInvitationsByEmail(ctx context.Context, arg ListPendingInvitationsByEmailParams) ([]Invitation, error) {
+	rows, err := q.db.Query(ctx, listPendingInvitationsByEmail, arg.Lower, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

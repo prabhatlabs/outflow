@@ -129,10 +129,17 @@ SELECT g.id, g.name, g.description, g.avatar_url, g.type, g.default_currency, g.
 INNER JOIN group_members gm ON gm.group_id = g.id
 WHERE gm.user_id = $1 AND gm.status = 'active'
 ORDER BY g.created_at DESC
+LIMIT $3 OFFSET $2
 `
 
-func (q *Queries) ListGroupsByUserID(ctx context.Context, userID pgtype.UUID) ([]Group, error) {
-	rows, err := q.db.Query(ctx, listGroupsByUserID, userID)
+type ListGroupsByUserIDParams struct {
+	UserID     pgtype.UUID `json:"user_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+func (q *Queries) ListGroupsByUserID(ctx context.Context, arg ListGroupsByUserIDParams) ([]Group, error) {
+	rows, err := q.db.Query(ctx, listGroupsByUserID, arg.UserID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

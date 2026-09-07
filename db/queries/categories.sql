@@ -5,7 +5,8 @@ SELECT * FROM categories WHERE id = $1;
 SELECT * FROM categories WHERE name = $1 AND group_id = $2;
 
 -- name: ListCategoriesByGroupID :many
-SELECT * FROM categories WHERE group_id = $1 ORDER BY name ASC;
+SELECT * FROM categories WHERE group_id = $1 ORDER BY name ASC
+LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CreateCategory :one
 INSERT INTO categories (
