@@ -8,12 +8,20 @@ export type AuthStatus =
   | "authenticated"
   | "unauthenticated"
 
+export type UpdateProfileInput = {
+  first_name?: string
+  last_name?: string | null
+  avatar_url?: string | null
+  timezone?: string
+}
+
 type AuthState = {
   user: User | null
   status: AuthStatus
   loadUser: () => Promise<void>
   refresh: () => Promise<void>
   logout: () => Promise<void>
+  updateProfile: (patch: UpdateProfileInput) => Promise<User>
   setUser: (user: User | null) => void
 }
 
@@ -56,6 +64,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       set({ user: null, status: "unauthenticated" })
     }
+  },
+
+  updateProfile: async (patch) => {
+    const user = await api.patch<User>("/auth/me", patch)
+    set({ user })
+    return user
   },
 
   setUser: (user) => set({ user }),
