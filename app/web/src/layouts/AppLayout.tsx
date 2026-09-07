@@ -1,9 +1,9 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Outlet } from "react-router";
-import AppSidebar from "./components/AppSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { DialogProvider } from "@/providers/dialog-provider";
 import { useGroupsStore } from "@/store/groups";
 import { useEffect } from "react";
+import { Outlet } from "react-router";
+import AppSidebar from "./components/AppSidebar";
 
 function AppLayout() {
   // keeping all the base or boot api calls here!
@@ -21,10 +21,7 @@ function AppLayout() {
         <AppSidebar />
         <div className="md:pl-0 p-2 bg-sidebar w-full">
           <div className="min-h-[calc(100dvh-16px)] rounded-4xl bg-background border relative">
-            <div className="md:hidden absolute top-0 left-0 m-2">
-              <SidebarTrigger />
-            </div>
-            <main className="max-w-360 w-full mx-auto p-4">
+            <main className="max-w-360 w-full mx-auto p-4 md:px-5 md:py-3">
               <Outlet />
             </main>
           </div>

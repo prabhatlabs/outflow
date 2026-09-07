@@ -1,7 +1,9 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { useDialogStore } from "@/store/dialog"
+import { BudgetDialog } from "./BudgetDialog"
 import { ConfirmDialog } from "./ConfirmDialog"
 import { CreateGroupDialog } from "./CreateGroupDialog"
+import { EditProfileDialog } from "./EditProfileDialog"
 import type { DialogPayloadMap } from "./types"
 
 export function DialogHost() {
@@ -31,6 +33,13 @@ export function DialogHost() {
                 payload={d.payload as DialogPayloadMap["confirm"]}
               />
             )}
+            {d.type === "budget" && (
+              <BudgetDialog
+                id={d.id}
+                payload={d.payload as DialogPayloadMap["budget"]}
+              />
+            )}
+            {d.type === "editProfile" && <EditProfileDialog id={d.id} />}
           </DialogContent>
         </Dialog>
       ))}

@@ -11,7 +11,6 @@ export type AuthStatus =
 export type UpdateProfileInput = {
   first_name?: string
   last_name?: string | null
-  avatar_url?: string | null
   timezone?: string
 }
 

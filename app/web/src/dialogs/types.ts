@@ -1,4 +1,4 @@
-export const DIALOGS = ["createGroup", "confirm"] as const
+export const DIALOGS = ["createGroup", "confirm", "budget", "editProfile"] as const
 
 export type DialogType = (typeof DIALOGS)[number]
 
@@ -12,6 +12,8 @@ export type DialogPayloadMap = {
     destructive?: boolean
     onConfirm: () => void | Promise<void>
   }
+  budget: { budgetId?: string } | undefined
+  editProfile: undefined
 }
 
 export type OpenDialog = {

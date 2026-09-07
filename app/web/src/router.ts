@@ -5,6 +5,12 @@ import AppLayout from "./layouts/AppLayout";
 import IndexRedirect from "./pages/IndexRedirect";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import ArchivedGroups from "./pages/ArchivedGroups"
+import Dashboard from "./pages/Dashboard"
+import Groups from "./pages/Groups"
+import Invitations from "./pages/Invitations"
+import PersonalBudgets from "./pages/PersonalBudgets"
+import Settings from "./pages/Settings"
 import {
   ActivityPage,
   BalancesPage,
@@ -16,7 +22,7 @@ import {
   OverviewPage,
   SettleUpPage,
   SettlementsPage,
-  SettingsPage,
+  SettingsPage as GroupSettingsPage,
 } from "./pages/groups/sections";
 
 const router = createBrowserRouter([
@@ -35,13 +41,13 @@ const router = createBrowserRouter([
             index: true,
             Component: IndexRedirect,
           },
-          { path: "groups", Component: NotFound },
-          { path: "groups/archived", Component: NotFound },
-          { path: "dashboard", Component: NotFound },
-          { path: "personal-budgets", Component: NotFound },
-          { path: "invitations", Component: NotFound },
-          { path: "profile", Component: NotFound },
-          { path: "settings", Component: NotFound },
+          { path: "groups", Component: Groups },
+          { path: "groups/archived", Component: ArchivedGroups },
+          { path: "dashboard", Component: Dashboard },
+          { path: "personal-budgets", Component: PersonalBudgets },
+          { path: "invitations", Component: Invitations },
+          { path: "profile", Component: Settings },
+          { path: "settings", Component: Settings },
           {
             path: ":groupId",
             Component: RequireGroup,
@@ -57,7 +63,7 @@ const router = createBrowserRouter([
               { path: "members", Component: MembersPage },
               { path: "members/invitations", Component: MemberInvitationsPage },
               { path: "activity", Component: ActivityPage },
-              { path: "settings", Component: SettingsPage },
+              { path: "settings", Component: GroupSettingsPage },
             ],
           },
           {

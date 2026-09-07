@@ -1,13 +1,9 @@
+import PageHeader from "@/components/PageHeader";
 import { useParams } from "react-router";
 
 function Section({ title }: { title: string }) {
   const { groupId } = useParams();
-  return (
-    <div className="grid gap-1">
-      <h1 className="text-2xl font-semibold">{title}</h1>
-      <p className="text-sm text-muted-foreground">{groupId} · coming soon</p>
-    </div>
-  );
+  return <PageHeader title={title} description={groupId} />;
 }
 
 export function OverviewPage() {
