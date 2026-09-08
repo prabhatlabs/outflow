@@ -1,10 +1,9 @@
-import { useState } from "react";
-import { Navigate } from "react-router";
-import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ui/theme-toggle";
 import { api, ApiError, getApiUrl } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
+import { Mail } from "lucide-react";
+import { useState } from "react";
+import { Navigate } from "react-router";
 
 function Login() {
   const { user, status } = useAuthStore();
@@ -43,14 +42,11 @@ function Login() {
   return (
     <main className="flex min-h-svh flex-col justify-center p-4">
       <div className="mx-auto flex w-full max-w-sm flex-col gap-8">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold">Outflow</h1>
-            <p className="text-sm text-muted-foreground">
-              Split expenses with your people.
-            </p>
-          </div>
-          <ModeToggle />
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold">Outflow</h1>
+          <p className="text-sm text-muted-foreground">
+            Split expenses with your people.
+          </p>
         </div>
 
         <div className="space-y-4">

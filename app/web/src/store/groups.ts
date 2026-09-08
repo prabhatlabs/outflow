@@ -30,6 +30,7 @@ type GroupsState = {
   createGroup: (input: CreateGroupInput) => Promise<Group>
   editGroup: (id: string, patch: EditGroupInput) => Promise<Group>
   archiveGroup: (id: string) => Promise<Group>
+  unarchiveGroup: (id: string) => Promise<Group>
   setGroups: (groups: Group[]) => void
   setCurrentGroup: (group: Group | null) => void
   setCurrentGroupById: (id: string) => void
@@ -130,7 +131,7 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
 
   archiveGroup: async (id) => {
     try {
-      const group = await api.del<Group>(`/groups/${id}`)
+      const group = await api.patch<Group>(`/groups/${id}/archive`)
       const { groups, currentGroup } = get()
       const nextGroups = groups.map((g) => (g.id === group.id ? group : g))
       const nextCurrent =
@@ -142,6 +143,25 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to archive group"
+      set({ error: message })
+      throw err
+    }
+  },
+
+  unarchiveGroup: async (id) => {
+    try {
+      const group = await api.patch<Group>(`/groups/${id}/unarchive`)
+      const { groups, currentGroup } = get()
+      const nextGroups = groups.map((g) => (g.id === group.id ? group : g))
+      const nextCurrent =
+        currentGroup?.id === group.id
+          ? (nextGroups.find((g) => g.is_archived) ?? null)
+          : currentGroup
+      set({ groups: nextGroups, currentGroup: nextCurrent, error: null })
+      return group
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to unarchive group"
       set({ error: message })
       throw err
     }

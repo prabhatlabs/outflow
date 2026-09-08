@@ -5,9 +5,9 @@ type BannerVariant = "default" | "destructive" | "warning" | "success"
 
 const variantStyles: Record<BannerVariant, string> = {
   default: "bg-muted/50 border-muted-foreground/20",
-  destructive: "bg-destructive/50 border-destructive/50 dark:bg-destructive/20",
-  warning: "bg-amber-500/50 border-amber-500/50 dark:bg-amber-500/20",
-  success: "bg-emerald-500/50 border-emerald-500/50 dark:bg-emerald-500/20",
+  destructive: "bg-destructive/10 text-destructive dark:bg-destructive/20 border-destructive/50 dark:border-destructive/20",
+  warning: "bg-amber-500/10 border-amber-500/50 dark:bg-amber-500/20",
+  success: "bg-emerald-500/10 border-emerald-500/50 dark:bg-emerald-500/20",
 }
 
 type BannerCardProps = {
@@ -35,9 +35,9 @@ export function BannerCard({
     >
       <CardContent className="px-3">
         <div className="flex flex-col gap-1">
-          <p className="font-medium leading-tight">{title}</p>
+          <p className="font-semibold leading-tight">{title}</p>
           {description && (
-            <p className="text-sm text-muted-foreground leading-tight">
+            <p className="text-sm leading-tight">
               {description}
             </p>
           )}

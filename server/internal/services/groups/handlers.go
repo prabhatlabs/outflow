@@ -223,6 +223,23 @@ func (s *Service) archiveHandler(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, "Group archived successfully", group)
 }
 
+func (s *Service) unarchiveHandler(w http.ResponseWriter, r *http.Request) {
+	groupID := lib.GroupIDFromContextWithNotFoundErr(r.Context(), w)
+	groupPgID := lib.PGUUID(groupID)
+
+	group, err := s.db.Q.UnarchiveGroup(r.Context(), groupPgID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			response.NotFound(w, "Group not found")
+			return
+		}
+		response.InternalServerError(w, "Failed to unarchive group")
+		return
+	}
+
+	response.OK(w, "Group unarchived successfully", group)
+}
+
 // settled = repayments received minus sent.
 type balanceRow struct {
 	UserID    pgtype.UUID    `json:"user_id"`

@@ -21,15 +21,16 @@ func GroupsRouter(database *lib.DB) *chi.Mux {
 
 	r.Get("/all", s.allHandler)
 	r.Post("/create", s.createHandler)
-	r.With(lib.RequireGroupMember(database)).Get("/{groupID}", s.getHandler)
-	r.With(lib.RequireGroupOwner(database)).Patch("/{groupID}", s.editHandler)
-	r.With(lib.RequireGroupOwner(database)).Delete("/{groupID}", s.archiveHandler)
 
 	// group-scoped sub-resources: membership is enforced at the {groupID}
 	// level, ownership checks happen per-route inside each sub-router
 	r.Route("/{groupID}", func(r chi.Router) {
 		r.Use(lib.RequireGroupMember(database))
+		r.With(lib.RequireGroupOwner(database)).Patch("/", s.editHandler)
+		r.With(lib.RequireGroupOwner(database)).Patch("/archive", s.archiveHandler)
+		r.With(lib.RequireGroupOwner(database)).Patch("/unarchive", s.unarchiveHandler)
 
+		r.Get("/", s.getHandler)
 		r.Get("/balances", s.balancesHandler)
 		r.Mount("/categories", categories.CategoriesRouter(database))
 		r.Mount("/expenses", expenses.ExpensesRouter(database))
