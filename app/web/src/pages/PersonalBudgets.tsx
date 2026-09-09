@@ -1,12 +1,15 @@
+import { Plus } from "lucide-react"
 import { useEffect } from "react"
-import { Badge } from "@/components/ui/badge"
 import { BannerCard } from "@/components/BannerCard"
+import { BudgetList } from "@/components/budgets/BudgetList"
+import type { Budget } from "@/components/budgets/BudgetListItem"
+import { BudgetTable } from "@/components/budgets/BudgetTable"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/PageHeader"
 import { useDialogStore } from "@/store/dialog"
 import { usePersonalBudgetsStore } from "@/store/budgets"
+import { useViewModeStore } from "@/store/viewMode"
 
 export default function PersonalBudgets() {
   const items = usePersonalBudgetsStore((s) => s.items)
@@ -21,13 +24,32 @@ export default function PersonalBudgets() {
     if (status === "idle") fetch()
   }, [status, fetch])
 
+  const mode = useViewModeStore((s) => s.mode)
+
+  const handleEdit = (budget: Budget) => {
+    useDialogStore.getState().open("budget", { budgetId: budget.id })
+  }
+
+  const handleDelete = (budget: Budget) => {
+    useDialogStore.getState().open("confirm", {
+      title: "Delete budget?",
+      description: "This cannot be undone.",
+      destructive: true,
+      confirmLabel: "Delete",
+      onConfirm: () => remove(budget.id),
+    })
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Personal budgets"
         description="Limits for your own spending across groups."
         actions={
-          <Button onClick={() => useDialogStore.getState().open("budget")}>New budget</Button>
+          <Button onClick={() => useDialogStore.getState().open("budget")}>
+            <Plus className="size-4" />
+            New budget
+          </Button>
         }
       />
 
@@ -36,9 +58,9 @@ export default function PersonalBudgets() {
       )}
 
       {status === "loading" && items.length === 0 && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Skeleton className="h-28 w-full rounded-2xl" />
-          <Skeleton className="h-28 w-full rounded-2xl" />
+        <div className="grid gap-3">
+          <Skeleton className="h-24 w-full rounded-2xl" />
+          <Skeleton className="h-24 w-full rounded-2xl" />
         </div>
       )}
 
@@ -54,47 +76,12 @@ export default function PersonalBudgets() {
         />
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {items.map((b) => (
-          <Card key={b.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-2">
-                <CardTitle>₹ {String(b.amount_limit)}</CardTitle>
-                <Badge variant="secondary">{b.period}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {b.start_date?.slice(0, 10) ?? "—"} → {b.end_date?.slice(0, 10) ?? "—"} · at {b.alert_threshold}%
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => useDialogStore.getState().open("budget", { budgetId: b.id })}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() =>
-                    useDialogStore.getState().open("confirm", {
-                      title: "Delete budget?",
-                      description: "This cannot be undone.",
-                      destructive: true,
-                      confirmLabel: "Delete",
-                      onConfirm: () => remove(b.id),
-                    })
-                  }
-                >
-                  Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+      {items.length > 0 &&
+        (mode === "table" ? (
+          <BudgetTable budgets={items} onEdit={handleEdit} onDelete={handleDelete} />
+        ) : (
+          <BudgetList budgets={items} onEdit={handleEdit} onDelete={handleDelete} />
         ))}
-      </div>
 
       {hasMore && items.length > 0 && (
         <Button variant="outline" onClick={() => fetchMore()} disabled={status === "loading"}>

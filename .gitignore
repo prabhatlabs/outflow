@@ -2,3 +2,19 @@
 plan
 *.env
 config.ymal
+
+# Go backend build output (server/Makefile `build` target)
+# the compiled binary is literally named `outflow`, so anchor the path
+/server/outflow
+
+# Go test / coverage / tooling artifacts
+*.exe
+*.test
+*.out
+coverage.out
+coverage.html
+
+# Editor directories and files
+.vscode/*
+.idea
+.DS_Store

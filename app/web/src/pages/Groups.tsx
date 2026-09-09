@@ -41,7 +41,7 @@ export default function Groups() {
       )}
 
       {status === "loading" && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3">
           <Skeleton className="h-24 w-full rounded-2xl" />
           <Skeleton className="h-24 w-full rounded-2xl" />
         </div>

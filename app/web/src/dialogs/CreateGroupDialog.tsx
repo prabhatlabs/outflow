@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   DialogDescription,
@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import type { GroupType } from "@/lib/types"
 import { useDialogStore } from "@/store/dialog"
 import { useGroupsStore } from "@/store/groups"
@@ -30,26 +31,44 @@ export function CreateGroupDialog({
 }) {
   const close = useDialogStore((s) => s.close)
   const createGroup = useGroupsStore((s) => s.createGroup)
-  const [name, setName] = useState(payload?.defaultName ?? "")
-  const [description, setDescription] = useState("")
-  const [type, setType] = useState<GroupType>("household")
-  const [currency, setCurrency] = useState("USD")
+  const editGroup = useGroupsStore((s) => s.editGroup)
+  const groups = useGroupsStore((s) => s.groups)
+
+  const existing = useMemo(
+    () => (payload?.groupId ? (groups.find((g) => g.id === payload.groupId) ?? null) : null),
+    [groups, payload?.groupId],
+  )
+  const isEdit = existing !== null
+
+  const [name, setName] = useState(existing?.name ?? payload?.defaultName ?? "")
+  const [description, setDescription] = useState(existing?.description ?? "")
+  const [type, setType] = useState<GroupType>(existing?.type ?? "household")
+  const [currency, setCurrency] = useState(existing?.default_currency ?? "USD")
   const [pending, setPending] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     setPending(true)
     setFormError(null)
     try {
-      await createGroup({
-        name: name.trim(),
-        description: description.trim(),
-        type,
-        default_currency: currency.trim() || "USD",
-      })
+      if (isEdit && existing) {
+        await editGroup(existing.id, {
+          name: name.trim(),
+          description: description.trim(),
+          type,
+          default_currency: currency.trim() || "USD",
+        })
+      } else {
+        await createGroup({
+          name: name.trim(),
+          description: description.trim(),
+          type,
+          default_currency: currency.trim() || "USD",
+        })
+      }
       close(id)
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to create group")
+      setFormError(err instanceof Error ? err.message : isEdit ? "Failed to update group" : "Failed to create group")
     } finally {
       setPending(false)
     }
@@ -58,9 +77,9 @@ export function CreateGroupDialog({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Create group</DialogTitle>
+        <DialogTitle>{isEdit ? "Edit group" : "Create group"}</DialogTitle>
         <DialogDescription>
-          Groups share expenses, balances and settlements.
+          {isEdit ? "Update the group." : "Groups share expenses, balances and settlements."}
         </DialogDescription>
       </DialogHeader>
 
@@ -77,7 +96,7 @@ export function CreateGroupDialog({
 
         <label className="grid gap-1.5">
           <span className="text-sm font-medium">Description</span>
-          <Input
+          <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What is this group for?"
@@ -122,10 +141,10 @@ export function CreateGroupDialog({
               Cancel
             </Button>
             <Button
-              onClick={handleCreate}
+              onClick={handleSubmit}
               disabled={name.trim().length === 0 || pending}
             >
-              {pending ? "Creating..." : "Create"}
+              {pending ? "Saving..." : isEdit ? "Save" : "Create"}
             </Button>
           </div>
         </div>

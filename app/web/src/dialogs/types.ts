@@ -3,7 +3,7 @@ export const DIALOGS = ["createGroup", "confirm", "budget", "editProfile"] as co
 export type DialogType = (typeof DIALOGS)[number]
 
 export type DialogPayloadMap = {
-  createGroup: undefined | { defaultName?: string }
+  createGroup: undefined | { defaultName?: string; groupId?: string }
   confirm: {
     title: string
     description?: string

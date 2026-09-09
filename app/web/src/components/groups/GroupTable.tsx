@@ -11,7 +11,7 @@ import {
 import type { Group } from "@/lib/types";
 import { useDialogStore } from "@/store/dialog";
 import { useGroupsStore } from "@/store/groups";
-import { Archive, SquareArrowOutUpRight } from "lucide-react";
+import { Archive, ArchiveRestore, Pencil, SquareArrowOutUpRight } from "lucide-react";
 import { Link } from "react-router";
 
 type Props = {
@@ -27,6 +27,9 @@ export function GroupTable({ groups }: Props) {
   const archiveGroup = useGroupsStore((s) => s.archiveGroup);
   const unarchiveGroup = useGroupsStore((s) => s.unarchiveGroup);
 
+  const handleEdit = (group: Group) => {
+    useDialogStore.getState().open("createGroup", { groupId: group.id });
+  };
 
   const handleArchive = (group: Group) => {
     useDialogStore.getState().open("confirm", {
@@ -86,13 +89,21 @@ export function GroupTable({ groups }: Props) {
                   <SquareArrowOutUpRight />
                   <Link to={`/${group.id}/overview`}>Open</Link>
                 </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() => handleEdit(group)}
+                >
+                  <Pencil />
+                  Edit
+                </Button>
                 {group.is_archived ? (
                   <Button
                     size="xs"
                     variant="default"
                     onClick={() => handleUnarchive(group)}
                   >
-                    <Archive />
+                    <ArchiveRestore />
                     Unarchive
                   </Button>
                 ) : (

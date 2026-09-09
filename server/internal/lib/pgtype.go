@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,7 +31,7 @@ func PGUUID(id uuid.UUID) pgtype.UUID {
 // returned on failure.
 func Numeric(v float64) pgtype.Numeric {
 	var n pgtype.Numeric
-	if err := n.Scan(v); err != nil {
+	if err := n.Scan(strconv.FormatFloat(v, 'f', -1, 64)); err != nil {
 		return pgtype.Numeric{}
 	}
 	return n
