@@ -56,9 +56,6 @@ CREATE TABLE IF NOT EXISTS auths (
     CONSTRAINT user_id_provider UNIQUE (user_id, provider)
 );
 
--- Auths Index
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_id ON auths (user_id);
-
 -- Auths Triggers
 CREATE TRIGGER set_auths_updated_at
 BEFORE UPDATE ON auths

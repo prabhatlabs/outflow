@@ -13,7 +13,6 @@ DROP TRIGGER IF EXISTS set_personal_budgets_updated_at ON personal_budgets;
 
 -- Drop Indexes
 DROP INDEX IF EXISTS idx_users_email;
-DROP INDEX IF EXISTS idx_users_id;
 DROP INDEX IF EXISTS idx_groups_created_by;
 DROP INDEX IF EXISTS idx_group_members_user_id;
 DROP INDEX IF EXISTS idx_group_members_group_id;
