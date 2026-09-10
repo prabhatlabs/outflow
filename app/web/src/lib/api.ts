@@ -22,7 +22,58 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+export type AuthHandlers = {
+  /** Attempts a token refresh. Rejects when the refresh fails. */
+  refresh: () => Promise<void>
+  /** Called when the refresh fails (session is really dead). */
+  onExpired?: () => void
+}
+
+let authHandlers: AuthHandlers | null = null
+
+export function setAuthHandlers(handlers: AuthHandlers | null) {
+  authHandlers = handlers
+}
+
+/** Endpoints that must never trigger the refresh-on-401 interceptor. */
+const NON_INTERCEPTED_PATHS = new Set([
+  "/auth/refresh",
+  "/auth/logout",
+  "/auth/login/email",
+  "/auth/login/google",
+  "/auth/callback/email",
+  "/auth/callback/google",
+])
+
+/**
+ * Single-flight refresh: concurrent 401s await the same promise
+ * so we issue at most one POST /auth/refresh per expiry window.
+ */
+let refreshPromise: Promise<boolean> | null = null
+
+function tryRefresh(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise
+  if (authHandlers === null) return Promise.resolve(false)
+  const handlers = authHandlers
+  refreshPromise = (async () => {
+    try {
+      await handlers.refresh()
+      return true
+    } catch {
+      handlers.onExpired?.()
+      return false
+    } finally {
+      refreshPromise = null
+    }
+  })()
+  return refreshPromise
+}
+
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  retried = false,
+): Promise<T> {
   let response: Response
   try {
     response = await fetch(`${API_URL}${path}`, {
@@ -37,22 +88,42 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new ApiError(0, "NetworkError", "Unable to reach the server")
   }
 
-  let body: (ApiResponse<T> & ApiErrorBody) | null = null
-  try {
-    body = (await response.json()) as ApiResponse<T> & ApiErrorBody
-  } catch {
-    body = null
-  }
-
   if (!response.ok) {
-    throw new ApiError(
-      response.status,
-      body?.error,
-      body?.message ?? response.statusText,
-    )
+    if (
+      response.status === 401 &&
+      !retried &&
+      authHandlers !== null &&
+      !NON_INTERCEPTED_PATHS.has(path)
+    ) {
+      const refreshed = await tryRefresh()
+      if (refreshed) {
+        return request<T>(path, options, true)
+      }
+    }
+    throw await toApiError(response)
   }
 
+  const body = await parseBody(response)
   return (body?.data ?? null) as T
+}
+
+async function parseBody(
+  response: Response,
+): Promise<(ApiResponse<unknown> & ApiErrorBody) | null> {
+  try {
+    return (await response.json()) as ApiResponse<unknown> & ApiErrorBody
+  } catch {
+    return null
+  }
+}
+
+async function toApiError(response: Response): Promise<ApiError> {
+  const body = await parseBody(response)
+  return new ApiError(
+    response.status,
+    body?.error,
+    body?.message ?? response.statusText,
+  )
 }
 
 export const api = {

@@ -29,3 +29,6 @@
 ## Version Control
 - Do not run `git commit`, `git push`, or any other commit action unless explicitly asked to in the current request.
 - Leave changes as-is in the working tree; committing is a separate step the user will request.
+
+## Environment Variables
+- Accessing environment variables is strictly not allowed; don't even ask for permission.

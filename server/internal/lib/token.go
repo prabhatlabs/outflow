@@ -16,8 +16,8 @@ const (
 )
 
 const (
-	AccessTokenTTL  = 15 * time.Minute
-	RefreshTokenTTL = 72 * time.Hour
+	AccessTokenTTL  = 6 * time.Hour
+	RefreshTokenTTL = 7 * 24 * time.Hour
 )
 
 type Claims struct {
