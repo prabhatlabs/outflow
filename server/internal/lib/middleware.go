@@ -114,7 +114,7 @@ func requireGroupMembership(database *DB, requireOwner bool, next http.Handler) 
 				response.NotFound(w, "Group not found")
 				return
 			}
-			response.InternalServerError(w, "Failed to verify group membership")
+			response.InternalServerError(w, err, "Failed to verify group membership")
 			return
 		}
 

@@ -64,7 +64,7 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		PageOffset: offset,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch invitations")
+		response.InternalServerError(w, err, "Failed to fetch invitations")
 		return
 	}
 	if invitations == nil {
@@ -107,13 +107,13 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	inviter, err := s.db.Q.GetUserByID(r.Context(), lib.PGUUID(userID))
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch inviter")
+		response.InternalServerError(w, err, "Failed to fetch inviter")
 		return
 	}
 
 	rawToken, tokenHash, err := generateToken()
 	if err != nil {
-		response.InternalServerError(w, "Failed to generate invitation token")
+		response.InternalServerError(w, err, "Failed to generate invitation token")
 		return
 	}
 
@@ -135,7 +135,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 			response.Conflict(w, "An invitation for this email already exists")
 			return
 		}
-		response.InternalServerError(w, "Failed to create invitation")
+		response.InternalServerError(w, err, "Failed to create invitation")
 		return
 	}
 
@@ -183,7 +183,7 @@ func (s *Service) cancelHandler(w http.ResponseWriter, r *http.Request) {
 
 	cancelled, err := s.db.Q.CancelInvitation(r.Context(), inv.ID)
 	if err != nil {
-		response.InternalServerError(w, "Failed to cancel invitation")
+		response.InternalServerError(w, err, "Failed to cancel invitation")
 		return
 	}
 
@@ -197,7 +197,7 @@ func (s *Service) pendingHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := s.db.Q.GetUserByID(r.Context(), lib.PGUUID(userID))
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch user")
+		response.InternalServerError(w, err, "Failed to fetch user")
 		return
 	}
 
@@ -212,7 +212,7 @@ func (s *Service) pendingHandler(w http.ResponseWriter, r *http.Request) {
 		PageOffset: offset,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch invitations")
+		response.InternalServerError(w, err, "Failed to fetch invitations")
 		return
 	}
 	if pending == nil {
@@ -246,7 +246,7 @@ func (s *Service) acceptHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Invitation not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch invitation")
+		response.InternalServerError(w, err, "Failed to fetch invitation")
 		return
 	}
 	if inv.Status != db.InvitationStatusPending {
@@ -260,7 +260,7 @@ func (s *Service) acceptHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, err := s.db.Q.GetUserByID(r.Context(), lib.PGUUID(userID))
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch user")
+		response.InternalServerError(w, err, "Failed to fetch user")
 		return
 	}
 	if !strings.EqualFold(user.Email, inv.Email) {
@@ -300,7 +300,7 @@ func (s *Service) acceptHandler(w http.ResponseWriter, r *http.Request) {
 			response.Conflict(w, "You are already a member of this group")
 			return
 		}
-		response.InternalServerError(w, "Failed to accept invitation")
+		response.InternalServerError(w, err, "Failed to accept invitation")
 		return
 	}
 
@@ -335,7 +335,7 @@ func (s *Service) rejectHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := s.db.Q.GetUserByID(r.Context(), lib.PGUUID(userID))
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch user")
+		response.InternalServerError(w, err, "Failed to fetch user")
 		return
 	}
 	if !strings.EqualFold(user.Email, inv.Email) {
@@ -349,7 +349,7 @@ func (s *Service) rejectHandler(w http.ResponseWriter, r *http.Request) {
 
 	rejected, err := s.db.Q.RejectInvitation(r.Context(), inv.ID)
 	if err != nil {
-		response.InternalServerError(w, "Failed to reject invitation")
+		response.InternalServerError(w, err, "Failed to reject invitation")
 		return
 	}
 

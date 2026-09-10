@@ -26,7 +26,7 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		PageOffset: offset,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch categories")
+		response.InternalServerError(w, err, "Failed to fetch categories")
 		return
 	}
 	if categories == nil {
@@ -73,7 +73,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		response.Conflict(w, "A category with this name already exists")
 		return
 	} else if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		response.InternalServerError(w, "Failed to check existing category")
+		response.InternalServerError(w, err, "Failed to check existing category")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		Color:     color,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to create category")
+		response.InternalServerError(w, err, "Failed to create category")
 		return
 	}
 
@@ -108,7 +108,7 @@ func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Category not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch category")
+		response.InternalServerError(w, err, "Failed to fetch category")
 		return
 	}
 	if category.GroupID != lib.PGUUID(groupID) {
@@ -145,7 +145,7 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Category not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch category")
+		response.InternalServerError(w, err, "Failed to fetch category")
 		return
 	}
 	if category.GroupID != lib.PGUUID(groupID) {
@@ -196,7 +196,7 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 
 	category, err = s.db.Q.UpdateCategory(r.Context(), params)
 	if err != nil {
-		response.InternalServerError(w, "Failed to update category")
+		response.InternalServerError(w, err, "Failed to update category")
 		return
 	}
 
@@ -219,7 +219,7 @@ func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Category not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch category")
+		response.InternalServerError(w, err, "Failed to fetch category")
 		return
 	}
 	if category.GroupID != lib.PGUUID(groupID) {
@@ -228,7 +228,7 @@ func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.db.Q.DeleteCategory(r.Context(), categoryID); err != nil {
-		response.InternalServerError(w, "Failed to delete category")
+		response.InternalServerError(w, err, "Failed to delete category")
 		return
 	}
 

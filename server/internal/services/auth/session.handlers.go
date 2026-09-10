@@ -23,7 +23,7 @@ func (s *Service) me(w http.ResponseWriter, r *http.Request) {
 			response.Unauthorized(w, "User not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch user")
+		response.InternalServerError(w, err, "Failed to fetch user")
 		return
 	}
 
@@ -86,7 +86,7 @@ func (s *Service) updateMe(w http.ResponseWriter, r *http.Request) {
 
 	user, err := s.db.Q.UpdateUser(r.Context(), params)
 	if err != nil {
-		response.InternalServerError(w, "Failed to update user")
+		response.InternalServerError(w, err, "Failed to update user")
 		return
 	}
 
@@ -108,7 +108,7 @@ func (s *Service) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.issueSession(w, lib.PGUUID(claims.UserID)); err != nil {
-		response.InternalServerError(w, "Failed to issue tokens")
+		response.InternalServerError(w, err, "Failed to issue tokens")
 		return
 	}
 

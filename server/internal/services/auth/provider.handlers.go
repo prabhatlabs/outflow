@@ -71,12 +71,12 @@ func (s *Service) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		EmailVerified:     userInfo.VerifiedEmail != nil && *userInfo.VerifiedEmail,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to create user")
+		response.InternalServerError(w, err, "Failed to create user")
 		return
 	}
 
 	if err := s.issueSession(w, user.ID); err != nil {
-		response.InternalServerError(w, "Failed to create session")
+		response.InternalServerError(w, err, "Failed to create session")
 		return
 	}
 
@@ -109,14 +109,14 @@ func (s *Service) emailMagicLinkLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	case err != nil:
 		log.Printf("auth: create email login code for %s: %v", emailAddr, err)
-		response.InternalServerError(w, "Failed to create login code")
+		response.InternalServerError(w, err, "Failed to create login code")
 		return
 	}
 
 	link := strings.TrimRight(lib.Envs.SERVER_URL, "/") + "/auth/callback/email?code=" + code.String()
 	if err := email.SendMagicLink(emailAddr, link, int(EmailLoginCodeTTL.Minutes())); err != nil {
 		log.Printf("auth: send magic link to %s: %v", emailAddr, err)
-		response.InternalServerError(w, "Failed to send login email")
+		response.InternalServerError(w, err, "Failed to send login email")
 		return
 	}
 
@@ -150,12 +150,12 @@ func (s *Service) emailMagicLinkCallback(w http.ResponseWriter, r *http.Request)
 	})
 	if err != nil {
 		log.Printf("auth: magic link login for %s: %v", emailAddr, err)
-		response.InternalServerError(w, "Failed to create user")
+		response.InternalServerError(w, err, "Failed to create user")
 		return
 	}
 
 	if err := s.issueSession(w, user.ID); err != nil {
-		response.InternalServerError(w, "Failed to create session")
+		response.InternalServerError(w, err, "Failed to create session")
 		return
 	}
 

@@ -1,6 +1,10 @@
 package response
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/prabhatlabs/outflow/internal/lib/log"
+)
 
 // OK sends a 200 success envelope.
 func OK(w http.ResponseWriter, message string, data any) {
@@ -55,6 +59,7 @@ func Conflict(w http.ResponseWriter, message string) {
 	Error(w, http.StatusConflict, message)
 }
 
-func InternalServerError(w http.ResponseWriter, message string) {
+func InternalServerError(w http.ResponseWriter, err error, message string) {
+	log.ServerLog(err, message)
 	Error(w, http.StatusInternalServerError, message)
 }

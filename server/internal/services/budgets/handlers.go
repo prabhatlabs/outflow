@@ -182,7 +182,7 @@ func (s *Service) groupListHandler(w http.ResponseWriter, r *http.Request) {
 		PageOffset: offset,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch budgets")
+		response.InternalServerError(w, err, "Failed to fetch budgets")
 		return
 	}
 	if budgets == nil {
@@ -219,7 +219,7 @@ func (s *Service) groupCreateHandler(w http.ResponseWriter, r *http.Request) {
 		AlertThreshold: threshold,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to create budget")
+		response.InternalServerError(w, err, "Failed to create budget")
 		return
 	}
 
@@ -237,7 +237,7 @@ func (s *Service) getGroupBudget(w http.ResponseWriter, r *http.Request, groupID
 			response.NotFound(w, "Budget not found")
 			return db.GroupBudget{}, false
 		}
-		response.InternalServerError(w, "Failed to fetch budget")
+		response.InternalServerError(w, err, "Failed to fetch budget")
 		return db.GroupBudget{}, false
 	}
 	if budget.GroupID != groupID {
@@ -298,7 +298,7 @@ func (s *Service) groupEditHandler(w http.ResponseWriter, r *http.Request) {
 		AlertThreshold: patch.threshold,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to update budget")
+		response.InternalServerError(w, err, "Failed to update budget")
 		return
 	}
 
@@ -316,7 +316,7 @@ func (s *Service) groupDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.db.Q.DeleteGroupBudget(r.Context(), budget.ID); err != nil {
-		response.InternalServerError(w, "Failed to delete budget")
+		response.InternalServerError(w, err, "Failed to delete budget")
 		return
 	}
 
@@ -335,7 +335,7 @@ func (s *Service) personalListHandler(w http.ResponseWriter, r *http.Request) {
 		PageOffset: offset,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch budgets")
+		response.InternalServerError(w, err, "Failed to fetch budgets")
 		return
 	}
 	if budgets == nil {
@@ -369,7 +369,7 @@ func (s *Service) personalCreateHandler(w http.ResponseWriter, r *http.Request) 
 		AlertThreshold: threshold,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to create budget")
+		response.InternalServerError(w, err, "Failed to create budget")
 		return
 	}
 
@@ -389,7 +389,7 @@ func (s *Service) personalGetHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Budget not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch budget")
+		response.InternalServerError(w, err, "Failed to fetch budget")
 		return
 	}
 	if budget.UserID != lib.PGUUID(userID) {
@@ -413,7 +413,7 @@ func (s *Service) personalEditHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Budget not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch budget")
+		response.InternalServerError(w, err, "Failed to fetch budget")
 		return
 	}
 	if budget.UserID != lib.PGUUID(userID) {
@@ -450,7 +450,7 @@ func (s *Service) personalEditHandler(w http.ResponseWriter, r *http.Request) {
 		AlertThreshold: patch.threshold,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to update budget")
+		response.InternalServerError(w, err, "Failed to update budget")
 		return
 	}
 
@@ -470,7 +470,7 @@ func (s *Service) personalDeleteHandler(w http.ResponseWriter, r *http.Request) 
 			response.NotFound(w, "Budget not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch budget")
+		response.InternalServerError(w, err, "Failed to fetch budget")
 		return
 	}
 	if budget.UserID != lib.PGUUID(userID) {
@@ -479,7 +479,7 @@ func (s *Service) personalDeleteHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := s.db.Q.DeletePersonalBudget(r.Context(), budget.ID); err != nil {
-		response.InternalServerError(w, "Failed to delete budget")
+		response.InternalServerError(w, err, "Failed to delete budget")
 		return
 	}
 

@@ -107,7 +107,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to create group")
+		response.InternalServerError(w, err, "Failed to create group")
 		return
 	}
 
@@ -124,7 +124,7 @@ func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Group not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch group")
+		response.InternalServerError(w, err, "Failed to fetch group")
 		return
 	}
 
@@ -199,7 +199,7 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Group not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to update group")
+		response.InternalServerError(w, err, "Failed to update group")
 		return
 	}
 
@@ -216,7 +216,7 @@ func (s *Service) archiveHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Group not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to archive group")
+		response.InternalServerError(w, err, "Failed to archive group")
 		return
 	}
 
@@ -233,7 +233,7 @@ func (s *Service) unarchiveHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Group not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to unarchive group")
+		response.InternalServerError(w, err, "Failed to unarchive group")
 		return
 	}
 
@@ -276,7 +276,7 @@ func (s *Service) balancesHandler(w http.ResponseWriter, r *http.Request) {
 		PageOffset: offset,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to compute balances")
+		response.InternalServerError(w, err, "Failed to compute balances")
 		return
 	}
 

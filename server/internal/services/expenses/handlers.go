@@ -194,7 +194,7 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 
 	expenses, err := s.db.Q.ListExpensesByGroupFiltered(r.Context(), params)
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch expenses")
+		response.InternalServerError(w, err, "Failed to fetch expenses")
 		return
 	}
 	if expenses == nil {
@@ -237,7 +237,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to create expense")
+		response.InternalServerError(w, err, "Failed to create expense")
 		return
 	}
 
@@ -373,7 +373,7 @@ func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Expense not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch expense")
+		response.InternalServerError(w, err, "Failed to fetch expense")
 		return
 	}
 	if out.Expense.GroupID != lib.PGUUID(groupID) {
@@ -401,7 +401,7 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Expense not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch expense")
+		response.InternalServerError(w, err, "Failed to fetch expense")
 		return
 	}
 	if existing.GroupID != lib.PGUUID(groupID) {
@@ -522,7 +522,7 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 			PageOffset: 0,
 		})
 		if err != nil {
-			response.InternalServerError(w, "Failed to load splits")
+			response.InternalServerError(w, err, "Failed to load splits")
 			return
 		}
 		rebalanced, err := rebalance(amount, old)
@@ -543,13 +543,13 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to update expense")
+		response.InternalServerError(w, err, "Failed to update expense")
 		return
 	}
 
 	out, err := s.fetchExpenseWithSplits(r.Context(), expenseID)
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch updated expense")
+		response.InternalServerError(w, err, "Failed to fetch updated expense")
 		return
 	}
 
@@ -615,7 +615,7 @@ func (s *Service) setArchived(w http.ResponseWriter, r *http.Request, archived b
 			response.NotFound(w, "Expense not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch expense")
+		response.InternalServerError(w, err, "Failed to fetch expense")
 		return
 	}
 	if existing.GroupID != lib.PGUUID(groupID) {
@@ -636,7 +636,7 @@ func (s *Service) setArchived(w http.ResponseWriter, r *http.Request, archived b
 	}
 	expense, err := fn(r.Context(), expenseID)
 	if err != nil {
-		response.InternalServerError(w, "Failed to update expense")
+		response.InternalServerError(w, err, "Failed to update expense")
 		return
 	}
 
@@ -664,7 +664,7 @@ func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Expense not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch expense")
+		response.InternalServerError(w, err, "Failed to fetch expense")
 		return
 	}
 	if existing.GroupID != lib.PGUUID(groupID) {
@@ -678,7 +678,7 @@ func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.db.Q.DeleteExpense(r.Context(), expenseID); err != nil {
-		response.InternalServerError(w, "Failed to delete expense")
+		response.InternalServerError(w, err, "Failed to delete expense")
 		return
 	}
 

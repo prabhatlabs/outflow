@@ -34,7 +34,7 @@ func (s *Service) getMemberInGroup(w http.ResponseWriter, r *http.Request, group
 			response.NotFound(w, "Member not found")
 			return db.GroupMember{}, false
 		}
-		response.InternalServerError(w, "Failed to fetch member")
+		response.InternalServerError(w, err, "Failed to fetch member")
 		return db.GroupMember{}, false
 	}
 	if member.GroupID != lib.PGUUID(groupID) {
@@ -57,7 +57,7 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		PageOffset: offset,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch members")
+		response.InternalServerError(w, err, "Failed to fetch members")
 		return
 	}
 	if members == nil {
@@ -111,7 +111,7 @@ func (s *Service) roleHandler(w http.ResponseWriter, r *http.Request) {
 		Role: role,
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to update role")
+		response.InternalServerError(w, err, "Failed to update role")
 		return
 	}
 
@@ -145,7 +145,7 @@ func (s *Service) removeHandler(w http.ResponseWriter, r *http.Request) {
 
 	updated, err := s.db.Q.RemoveGroupMember(r.Context(), target.ID)
 	if err != nil {
-		response.InternalServerError(w, "Failed to remove member")
+		response.InternalServerError(w, err, "Failed to remove member")
 		return
 	}
 
@@ -175,7 +175,7 @@ func (s *Service) leaveHandler(w http.ResponseWriter, r *http.Request) {
 
 	updated, err := s.db.Q.LeaveGroupMember(r.Context(), member.ID)
 	if err != nil {
-		response.InternalServerError(w, "Failed to leave group")
+		response.InternalServerError(w, err, "Failed to leave group")
 		return
 	}
 

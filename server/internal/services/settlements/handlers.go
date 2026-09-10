@@ -66,7 +66,7 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if err != nil {
-		response.InternalServerError(w, "Failed to fetch settlements")
+		response.InternalServerError(w, err, "Failed to fetch settlements")
 		return
 	}
 	if settlements == nil {
@@ -185,7 +185,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 			response.BadRequest(w, err.Error())
 			return
 		}
-		response.InternalServerError(w, "Failed to create settlement")
+		response.InternalServerError(w, err, "Failed to create settlement")
 		return
 	}
 
@@ -214,7 +214,7 @@ func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Settlement not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch settlement")
+		response.InternalServerError(w, err, "Failed to fetch settlement")
 		return
 	}
 	if settlement.GroupID != lib.PGUUID(groupID) {
@@ -252,7 +252,7 @@ func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
 			response.NotFound(w, "Settlement not found")
 			return
 		}
-		response.InternalServerError(w, "Failed to fetch settlement")
+		response.InternalServerError(w, err, "Failed to fetch settlement")
 		return
 	}
 	if settlement.GroupID != lib.PGUUID(groupID) {
@@ -267,7 +267,7 @@ func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
 		return q.DeleteSettlement(r.Context(), settlementID)
 	})
 	if err != nil {
-		response.InternalServerError(w, "Failed to delete settlement")
+		response.InternalServerError(w, err, "Failed to delete settlement")
 		return
 	}
 
