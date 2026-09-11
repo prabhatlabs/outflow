@@ -119,7 +119,10 @@ export function EditProfileDialog({ id }: { id: string }) {
 
         <div className="grid gap-1.5">
           <Label>Timezone</Label>
-          <Select value={timezone} onValueChange={setTimezone}>
+          <Select
+            value={timezone}
+            onValueChange={(v) => setTimezone(v ?? "")}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select timezone" />
             </SelectTrigger>

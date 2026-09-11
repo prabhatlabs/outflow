@@ -11,19 +11,17 @@ import Groups from "./pages/Groups"
 import Invitations from "./pages/Invitations"
 import PersonalBudgets from "./pages/PersonalBudgets"
 import Settings from "./pages/Settings"
-import {
-  ActivityPage,
-  BalancesPage,
-  BudgetsPage,
-  CategoriesPage,
-  ExpensesPage,
-  MemberInvitationsPage,
-  MembersPage,
-  OverviewPage,
-  SettleUpPage,
-  SettlementsPage,
-  SettingsPage as GroupSettingsPage,
-} from "./pages/groups/sections";
+import { ActivityPage } from "./pages/groups/Activity"
+import { BalancesPage } from "./pages/groups/Balances"
+import { BudgetsPage } from "./pages/groups/Budgets"
+import { CategoriesPage } from "./pages/groups/Categories"
+import { ExpensesPage } from "./pages/groups/Expenses"
+import { MemberInvitationsPage } from "./pages/groups/MemberInvitations"
+import { MembersPage } from "./pages/groups/Members"
+import { OverviewPage } from "./pages/groups/Overview"
+import { SettleUpPage } from "./pages/groups/SettleUp"
+import { SettlementsPage } from "./pages/groups/Settlements"
+import { SettingsPage as GroupSettingsPage } from "./pages/groups/Settings"
 
 const router = createBrowserRouter([
   {

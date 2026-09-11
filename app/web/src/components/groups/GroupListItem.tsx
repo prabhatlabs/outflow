@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Group } from "@/lib/types";
 import { useDialogStore } from "@/store/dialog";
@@ -58,10 +58,13 @@ export function GroupListItem({ group }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="xs" variant="outline">
+          <Link
+            to={`/${group.id}/overview`}
+            className={buttonVariants({ variant: "outline", size: "xs" })}
+          >
             <SquareArrowOutUpRight />
-            <Link to={`/${group.id}/overview`}>Open</Link>
-          </Button>
+            Open
+          </Link>
           <Button size="xs" variant="outline" onClick={() => handleEdit(group)}>
             <Pencil />
             Edit

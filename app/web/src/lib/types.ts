@@ -28,6 +28,8 @@ export type GroupType =
   | "project"
   | "other"
 
+export type GroupMemberRole = "owner" | "admin" | "member"
+
 export type Group = {
   id: string
   name: string
@@ -38,6 +40,7 @@ export type Group = {
   created_by: string
   is_archived: boolean
   archived_at: string | null
+  member_role: GroupMemberRole
   created_at: string
   updated_at: string
 }
@@ -200,7 +203,6 @@ export type CreateBudgetInput = {
 
 export type EditBudgetInput = Partial<CreateBudgetInput>
 
-export type GroupMemberRole = "owner" | "admin" | "member"
 export type GroupMemberStatus = "invited" | "active" | "left" | "removed"
 
 export type GroupMember = {

@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { api } from "@/lib/api"
-import type { Group, GroupType } from "@/lib/types"
+import type { Group, GroupMemberRole, GroupType } from "@/lib/types"
 
 export type GroupsStatus = "idle" | "loading" | "success" | "error"
 
@@ -177,3 +177,16 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
   clearGroups: () =>
     set({ groups: [], currentGroup: null, status: "idle", error: null }),
 }))
+
+// Role helpers for owner/admin-gated UI.
+export function canManage(group: Group | null): boolean {
+  return group?.member_role === "owner" || group?.member_role === "admin"
+}
+
+export function isOwner(group: Group | null): boolean {
+  return group?.member_role === "owner"
+}
+
+export function roleOf(group: Group | null): GroupMemberRole | null {
+  return group?.member_role ?? null
+}

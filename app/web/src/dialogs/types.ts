@@ -1,4 +1,14 @@
-export const DIALOGS = ["createGroup", "confirm", "budget", "editProfile"] as const
+export const DIALOGS = [
+  "createGroup",
+  "confirm",
+  "budget",
+  "editProfile",
+  "expense",
+  "settlement",
+  "category",
+  "inviteMember",
+  "groupBudget",
+] as const
 
 export type DialogType = (typeof DIALOGS)[number]
 
@@ -14,6 +24,13 @@ export type DialogPayloadMap = {
   }
   budget: { budgetId?: string } | undefined
   editProfile: undefined
+  expense: { groupId: string; expenseId?: string } | undefined
+  settlement:
+    | { groupId: string; fromUserId?: string; toUserId?: string; amount?: number }
+    | undefined
+  category: { groupId: string; categoryId?: string } | undefined
+  inviteMember: { groupId: string } | undefined
+  groupBudget: { groupId: string; budgetId?: string } | undefined
 }
 
 export type OpenDialog = {

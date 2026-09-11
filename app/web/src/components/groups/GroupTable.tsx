@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -85,10 +85,13 @@ export function GroupTable({ groups }: Props) {
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
-                <Button size="xs" variant="outline">
+                <Link
+                  to={`/${group.id}/overview`}
+                  className={buttonVariants({ variant: "outline", size: "xs" })}
+                >
                   <SquareArrowOutUpRight />
-                  <Link to={`/${group.id}/overview`}>Open</Link>
-                </Button>
+                  Open
+                </Link>
                 <Button
                   size="xs"
                   variant="outline"

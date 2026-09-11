@@ -15,6 +15,25 @@ import (
 	"github.com/prabhatlabs/outflow/internal/lib/response"
 )
 
+// groupWithRole wraps the group payload with the requesting user's member
+// role so clients can gate owner/admin-only UI.
+type groupWithRole struct {
+	db.Group
+	MemberRole db.GroupMemberRole `json:"member_role"`
+}
+
+func withRole(group db.Group, role db.GroupMemberRole) groupWithRole {
+	return groupWithRole{Group: group, MemberRole: role}
+}
+
+func memberRoleFromContext(r *http.Request) db.GroupMemberRole {
+	member, ok := lib.GroupMemberFromContext(r.Context())
+	if !ok {
+		return db.GroupMemberRoleMember
+	}
+	return member.Role
+}
+
 func parseGroupType(s string) (db.GroupType, bool) {
 	switch db.GroupType(s) {
 	case db.GroupTypeHousehold,
@@ -42,7 +61,7 @@ func (s *Service) allHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if groups == nil {
-		groups = []db.Group{}
+		groups = []db.ListGroupsByUserIDRow{}
 	}
 	response.OK(w, "Groups fetched successfully", groups)
 }
@@ -111,7 +130,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Created(w, "Group created successfully", group)
+	response.Created(w, "Group created successfully", withRole(group, db.GroupMemberRoleOwner))
 }
 
 func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +147,7 @@ func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, "Group fetched successfully", group)
+	response.OK(w, "Group fetched successfully", withRole(group, memberRoleFromContext(r)))
 }
 
 func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +222,7 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, "Group updated successfully", group)
+	response.OK(w, "Group updated successfully", withRole(group, memberRoleFromContext(r)))
 }
 
 func (s *Service) archiveHandler(w http.ResponseWriter, r *http.Request) {
@@ -220,7 +239,7 @@ func (s *Service) archiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, "Group archived successfully", group)
+	response.OK(w, "Group archived successfully", withRole(group, memberRoleFromContext(r)))
 }
 
 func (s *Service) unarchiveHandler(w http.ResponseWriter, r *http.Request) {
@@ -237,7 +256,7 @@ func (s *Service) unarchiveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, "Group unarchived successfully", group)
+	response.OK(w, "Group unarchived successfully", withRole(group, memberRoleFromContext(r)))
 }
 
 // settled = repayments received minus sent.

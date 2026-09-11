@@ -43,7 +43,7 @@ export function CreateGroupDialog({
   const [name, setName] = useState(existing?.name ?? payload?.defaultName ?? "")
   const [description, setDescription] = useState(existing?.description ?? "")
   const [type, setType] = useState<GroupType>(existing?.type ?? "household")
-  const [currency, setCurrency] = useState(existing?.default_currency ?? "USD")
+  const [currency, setCurrency] = useState(existing?.default_currency ?? "INR")
   const [pending, setPending] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -56,14 +56,14 @@ export function CreateGroupDialog({
           name: name.trim(),
           description: description.trim(),
           type,
-          default_currency: currency.trim() || "USD",
+          default_currency: currency.trim() || "INR",
         })
       } else {
         await createGroup({
           name: name.trim(),
           description: description.trim(),
           type,
-          default_currency: currency.trim() || "USD",
+          default_currency: currency.trim() || "INR",
         })
       }
       close(id)
@@ -124,7 +124,7 @@ export function CreateGroupDialog({
             <Input
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              placeholder="USD"
+              placeholder="INR"
               maxLength={3}
             />
           </label>

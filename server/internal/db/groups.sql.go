@@ -125,7 +125,7 @@ func (q *Queries) GetGroupByID(ctx context.Context, id pgtype.UUID) (Group, erro
 }
 
 const listGroupsByUserID = `-- name: ListGroupsByUserID :many
-SELECT g.id, g.name, g.description, g.avatar_url, g.type, g.default_currency, g.created_by, g.is_archived, g.archived_at, g.created_at, g.updated_at FROM groups g
+SELECT g.id, g.name, g.description, g.avatar_url, g.type, g.default_currency, g.created_by, g.is_archived, g.archived_at, g.created_at, g.updated_at, gm.role AS member_role FROM groups g
 INNER JOIN group_members gm ON gm.group_id = g.id
 WHERE gm.user_id = $1 AND gm.status = 'active'
 ORDER BY g.created_at DESC
@@ -138,15 +138,30 @@ type ListGroupsByUserIDParams struct {
 	PageLimit  int32       `json:"page_limit"`
 }
 
-func (q *Queries) ListGroupsByUserID(ctx context.Context, arg ListGroupsByUserIDParams) ([]Group, error) {
+type ListGroupsByUserIDRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	Name            string             `json:"name"`
+	Description     pgtype.Text        `json:"description"`
+	AvatarUrl       pgtype.Text        `json:"avatar_url"`
+	Type            GroupType          `json:"type"`
+	DefaultCurrency string             `json:"default_currency"`
+	CreatedBy       pgtype.UUID        `json:"created_by"`
+	IsArchived      bool               `json:"is_archived"`
+	ArchivedAt      pgtype.Timestamptz `json:"archived_at"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	MemberRole      GroupMemberRole    `json:"member_role"`
+}
+
+func (q *Queries) ListGroupsByUserID(ctx context.Context, arg ListGroupsByUserIDParams) ([]ListGroupsByUserIDRow, error) {
 	rows, err := q.db.Query(ctx, listGroupsByUserID, arg.UserID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Group
+	var items []ListGroupsByUserIDRow
 	for rows.Next() {
-		var i Group
+		var i ListGroupsByUserIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -159,6 +174,7 @@ func (q *Queries) ListGroupsByUserID(ctx context.Context, arg ListGroupsByUserID
 			&i.ArchivedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.MemberRole,
 		); err != nil {
 			return nil, err
 		}
