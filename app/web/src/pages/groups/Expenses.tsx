@@ -1,64 +1,64 @@
-import { Plus } from "lucide-react"
-import { useEffect, useState } from "react"
-import { useParams } from "react-router"
-import { BannerCard } from "@/components/BannerCard"
-import { ExpenseList } from "@/components/expenses/ExpenseList"
-import type { Expense } from "@/components/expenses/ExpenseListItem"
-import { ExpenseTable } from "@/components/expenses/ExpenseTable"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { DatePicker } from "@/components/ui/date-picker"
-import { Label } from "@/components/ui/label"
+import { BannerCard } from "@/components/BannerCard";
+import { ExpenseList } from "@/components/expenses/ExpenseList";
+import type { Expense } from "@/components/expenses/ExpenseListItem";
+import { ExpenseTable } from "@/components/expenses/ExpenseTable";
+import PageHeader from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
-import PageHeader from "@/components/PageHeader"
-import type { ExpenseFilters } from "@/lib/types"
-import { useCategoriesStore } from "@/store/categories"
-import { useDialogStore } from "@/store/dialog"
-import { useExpensesStore } from "@/store/expenses"
-import { useGroupsStore } from "@/store/groups"
-import { useMembersStore } from "@/store/members"
-import { useViewModeStore } from "@/store/viewMode"
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { ExpenseFilters } from "@/lib/types";
+import { useCategoriesStore } from "@/store/categories";
+import { useDialogStore } from "@/store/dialog";
+import { useExpensesStore } from "@/store/expenses";
+import { useGroupsStore } from "@/store/groups";
+import { useMembersStore } from "@/store/members";
+import { useViewModeStore } from "@/store/viewMode";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router";
 
 function memberName(first: string, last: string | null, email: string) {
-  return [first, last].filter(Boolean).join(" ") || email
+  return [first, last].filter(Boolean).join(" ") || email;
 }
 
 export function ExpensesPage() {
-  const { groupId } = useParams()
+  const { groupId } = useParams();
 
-  const currentGroup = useGroupsStore((s) => s.currentGroup)
-  const currency = currentGroup?.default_currency ?? "INR"
+  const currentGroup = useGroupsStore((s) => s.currentGroup);
+  const currency = currentGroup?.default_currency ?? "INR";
 
-  const items = useExpensesStore((s) => s.items)
-  const status = useExpensesStore((s) => s.status)
-  const error = useExpensesStore((s) => s.error)
-  const hasMore = useExpensesStore((s) => s.hasMore)
-  const fetch = useExpensesStore((s) => s.fetch)
-  const fetchMore = useExpensesStore((s) => s.fetchMore)
-  const archive = useExpensesStore((s) => s.archive)
-  const unarchive = useExpensesStore((s) => s.unarchive)
-  const remove = useExpensesStore((s) => s.remove)
+  const items = useExpensesStore((s) => s.items);
+  const status = useExpensesStore((s) => s.status);
+  const error = useExpensesStore((s) => s.error);
+  const hasMore = useExpensesStore((s) => s.hasMore);
+  const fetch = useExpensesStore((s) => s.fetch);
+  const fetchMore = useExpensesStore((s) => s.fetchMore);
+  const archive = useExpensesStore((s) => s.archive);
+  const unarchive = useExpensesStore((s) => s.unarchive);
+  const remove = useExpensesStore((s) => s.remove);
 
-  const members = useMembersStore((s) => s.items)
-  const membersStatus = useMembersStore((s) => s.status)
-  const fetchMembers = useMembersStore((s) => s.fetch)
+  const members = useMembersStore((s) => s.items);
+  const membersStatus = useMembersStore((s) => s.status);
+  const fetchMembers = useMembersStore((s) => s.fetch);
 
-  const categories = useCategoriesStore((s) => s.items)
-  const categoriesStatus = useCategoriesStore((s) => s.status)
-  const fetchCategories = useCategoriesStore((s) => s.fetch)
+  const categories = useCategoriesStore((s) => s.items);
+  const categoriesStatus = useCategoriesStore((s) => s.status);
+  const fetchCategories = useCategoriesStore((s) => s.fetch);
 
-  const [categoryId, setCategoryId] = useState("")
-  const [paidBy, setPaidBy] = useState("")
-  const [from, setFrom] = useState("")
-  const [to, setTo] = useState("")
-  const [includeArchived, setIncludeArchived] = useState(false)
+  const [categoryId, setCategoryId] = useState("");
+  const [paidBy, setPaidBy] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [includeArchived, setIncludeArchived] = useState(false);
 
   const filters: ExpenseFilters = {
     ...(categoryId ? { category_id: categoryId } : {}),
@@ -66,63 +66,65 @@ export function ExpensesPage() {
     ...(from ? { from } : {}),
     ...(to ? { to } : {}),
     ...(includeArchived ? { include_archived: true } : {}),
-  }
+  };
 
   useEffect(() => {
-    if (groupId && status === "idle") fetch(groupId, { filters })
+    if (groupId && status === "idle") fetch(groupId, { filters });
     // Re-run when filters change below via applyFilters; initial load only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupId, status, fetch])
+  }, [groupId, status, fetch]);
 
   useEffect(() => {
-    if (groupId && membersStatus === "idle") fetchMembers(groupId)
-  }, [groupId, membersStatus, fetchMembers])
+    if (groupId && membersStatus === "idle") fetchMembers(groupId);
+  }, [groupId, membersStatus, fetchMembers]);
 
   useEffect(() => {
-    if (groupId && categoriesStatus === "idle") fetchCategories(groupId)
-  }, [groupId, categoriesStatus, fetchCategories])
+    if (groupId && categoriesStatus === "idle") fetchCategories(groupId);
+  }, [groupId, categoriesStatus, fetchCategories]);
 
-  const mode = useViewModeStore((s) => s.mode)
+  const mode = useViewModeStore((s) => s.mode);
 
   const paidByName = (expense: Expense) => {
-    const m = members.find((m) => m.user_id === expense.paid_by)
-    return m ? memberName(m.first_name, m.last_name, m.email) : "Unknown"
-  }
+    const m = members.find((m) => m.user_id === expense.paid_by);
+    return m ? memberName(m.first_name, m.last_name, m.email) : "Unknown";
+  };
 
   const applyFilters = () => {
-    if (groupId) fetch(groupId, { filters, reset: true })
-  }
+    if (groupId) fetch(groupId, { filters, reset: true });
+  };
 
   const handleNew = () => {
-    if (!groupId) return
-    useDialogStore.getState().open("expense", { groupId })
-  }
+    if (!groupId) return;
+    useDialogStore.getState().open("expense", { groupId });
+  };
 
   const handleEdit = (expense: Expense) => {
-    if (!groupId) return
-    useDialogStore.getState().open("expense", { groupId, expenseId: expense.id })
-  }
+    if (!groupId) return;
+    useDialogStore
+      .getState()
+      .open("expense", { groupId, expenseId: expense.id });
+  };
 
   const handleDelete = (expense: Expense) => {
-    if (!groupId) return
+    if (!groupId) return;
     useDialogStore.getState().open("confirm", {
       title: "Delete expense?",
       description: "This cannot be undone.",
       destructive: true,
       confirmLabel: "Delete",
       onConfirm: () => remove(groupId, expense.id),
-    })
-  }
+    });
+  };
 
   const handleArchive = (expense: Expense) => {
-    if (!groupId) return
-    void archive(groupId, expense.id)
-  }
+    if (!groupId) return;
+    void archive(groupId, expense.id);
+  };
 
   const handleUnarchive = (expense: Expense) => {
-    if (!groupId) return
-    void unarchive(groupId, expense.id)
-  }
+    if (!groupId) return;
+    void unarchive(groupId, expense.id);
+  };
 
   return (
     <div className="space-y-6">
@@ -137,7 +139,7 @@ export function ExpensesPage() {
         }
       />
 
-      <div className="grid gap-3 rounded-2xl border p-3 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-3 rounded-2xl bg-card border p-3 sm:grid-cols-2 lg:grid-cols-6">
         <div className="grid gap-1.5">
           <Label>Category</Label>
           <Select
@@ -195,14 +197,19 @@ export function ExpensesPage() {
           />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="expenses-archived">Show archived</Label>
-          <span className="flex h-9 items-center">
+          <Label htmlFor="expenses-archived">Archived</Label>
+          <Button
+            onClick={() => {
+              setIncludeArchived((p) => !p);
+            }}
+            variant={"outline"}
+          >
             <Checkbox
               id="expenses-archived"
               checked={includeArchived}
-              onCheckedChange={(v) => setIncludeArchived(v === true)}
             />
-          </span>
+            {includeArchived ? "Showing" : "Hidden"}
+          </Button>
         </div>
         <div className="flex items-end">
           <Button
@@ -276,5 +283,5 @@ export function ExpensesPage() {
         </Button>
       )}
     </div>
-  )
+  );
 }

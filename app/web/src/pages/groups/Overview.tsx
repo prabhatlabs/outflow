@@ -70,9 +70,9 @@ export function OverviewPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card size="sm" className="gap-2">
+        <Card size="sm" className="gap-1.5">
           <CardHeader>
-            <CardTitle className="text-base text-muted-foreground">
+            <CardTitle className="text-sm md:text-base text-muted-foreground">
               Members
             </CardTitle>
           </CardHeader>
@@ -80,20 +80,20 @@ export function OverviewPage() {
             {membersStatus === "loading" ? (
               <Skeleton className="h-7 w-12" />
             ) : (
-              <p className="text-2xl font-semibold">{members.length}</p>
+              <p className="text-2xl md:text-4xl font-semibold">{members.length}</p>
             )}
             <Link
               to={`/${groupId}/members`}
-              className={buttonVariants({ variant: "link", className: "px-0" })}
+              className={buttonVariants({ variant: "link", className: "pl-0 pr-0" })}
             >
               View members
             </Link>
           </CardContent>
         </Card>
 
-        <Card size="sm" className="gap-2">
+        <Card size="sm" className="gap-1.5">
           <CardHeader>
-            <CardTitle className="text-base text-muted-foreground">
+            <CardTitle className="text-sm md:text-base text-muted-foreground">
               Net balance
             </CardTitle>
           </CardHeader>
@@ -101,22 +101,22 @@ export function OverviewPage() {
             {balancesStatus === "loading" ? (
               <Skeleton className="h-7 w-24" />
             ) : (
-              <p className="text-2xl font-semibold">
+              <p className="text-2xl md:text-4xl font-semibold">
                 {formatAmount(netTotal, currency)}
               </p>
             )}
             <Link
               to={`/${groupId}/balances`}
-              className={buttonVariants({ variant: "link", className: "px-0" })}
+              className={buttonVariants({ variant: "link", className: "pl-0 pr-0" })}
             >
               View balances
             </Link>
           </CardContent>
         </Card>
 
-        <Card size="sm" className="gap-2">
+        <Card size="sm" className="gap-1.5">
           <CardHeader>
-            <CardTitle className="text-base text-muted-foreground">
+            <CardTitle className="text-sm md:text-base text-muted-foreground">
               Recent expenses
             </CardTitle>
           </CardHeader>
@@ -124,11 +124,11 @@ export function OverviewPage() {
             {expensesStatus === "loading" ? (
               <Skeleton className="h-7 w-12" />
             ) : (
-              <p className="text-2xl font-semibold">{recentExpenses.length}</p>
+              <p className="text-2xl md:text-4xl font-semibold">{recentExpenses.length}</p>
             )}
             <Link
               to={`/${groupId}/expenses`}
-              className={buttonVariants({ variant: "link", className: "px-0" })}
+              className={buttonVariants({ variant: "link", className: "pl-0 pr-0" })}
             >
               View expenses
             </Link>
