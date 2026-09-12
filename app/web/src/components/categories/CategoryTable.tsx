@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -9,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Pencil, Trash2 } from "lucide-react"
-import { CategoryIcon } from "./CategoryIcon"
+import { CategoryVisual } from "./CategoryVisual"
 import type { Category } from "./CategoryListItem"
 
 type Props = {
@@ -29,7 +28,6 @@ export function CategoryTable({ categories, onEdit, onDelete }: Props) {
         <TableRow>
           <TableHead>Name</TableHead>
           <TableHead>Icon</TableHead>
-          <TableHead>Color</TableHead>
           <TableHead>Created</TableHead>
           <TableHead>Action</TableHead>
         </TableRow>
@@ -38,30 +36,17 @@ export function CategoryTable({ categories, onEdit, onDelete }: Props) {
         {categories.map((category) => (
           <TableRow key={category.id}>
             <TableCell className="truncate font-medium min-w-0 max-w-55">
-              <span className="flex items-center gap-2">
-                <span
-                  className="size-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: category.color }}
-                />
-                {category.name}
-              </span>
+              {category.name}
             </TableCell>
             <TableCell>
-              {category.icon ? (
-                <span className="flex items-center gap-1.5">
-                  <span style={{ color: category.color }}>
-                    <CategoryIcon name={category.icon} className="size-4" />
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {category.icon}
-                  </span>
-                </span>
+              {category.icon || category.color ? (
+                <CategoryVisual
+                  icon={category.icon}
+                  color={category.color}
+                />
               ) : (
                 "—"
               )}
-            </TableCell>
-            <TableCell>
-              <Badge variant="outline">{category.color}</Badge>
             </TableCell>
             <TableCell>{formatDate(category.created_at)}</TableCell>
             <TableCell>

@@ -59,10 +59,6 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	color := strings.TrimSpace(req.Color)
-	if color == "" {
-		response.BadRequest(w, "Category color is required")
-		return
-	}
 
 	// same name in the same group = conflict
 	existing, err := s.db.Q.GetCategoryByNameAndGroup(r.Context(), db.GetCategoryByNameAndGroupParams{
@@ -177,10 +173,6 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Color != nil {
 		color := strings.TrimSpace(*req.Color)
-		if color == "" {
-			response.BadRequest(w, "Category color cannot be empty")
-			return
-		}
 		params.Color = lib.RequiredText(color)
 		updated = true
 	}

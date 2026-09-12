@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { CategoryColorPicker } from "@/components/categories/CategoryColorPicker"
 import { CategoryIconPicker } from "@/components/categories/CategoryIconPicker"
 import { useCategoriesStore } from "@/store/categories"
 import { useDialogStore } from "@/store/dialog"
@@ -36,7 +37,7 @@ export function CategoryDialog({
   const isEdit = existing !== null
 
   const [name, setName] = useState(existing?.name ?? "")
-  const [color, setColor] = useState(existing?.color ?? "#3b82f6")
+  const [color, setColor] = useState(existing?.color ?? "")
   const [icon, setIcon] = useState(existing?.icon ?? "")
   const [pending, setPending] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
@@ -102,13 +103,8 @@ export function CategoryDialog({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-1.5">
-            <Label htmlFor="category-color">Color</Label>
-            <Input
-              id="category-color"
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-            />
+            <Label>Color</Label>
+            <CategoryColorPicker value={color} onChange={setColor} />
           </div>
           <div className="grid gap-1.5">
             <Label>Icon</Label>
