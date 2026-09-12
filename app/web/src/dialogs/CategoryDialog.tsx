@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { CategoryIconPicker } from "@/components/categories/CategoryIconPicker"
 import { useCategoriesStore } from "@/store/categories"
 import { useDialogStore } from "@/store/dialog"
 import type { DialogPayloadMap } from "./types"
@@ -110,13 +111,8 @@ export function CategoryDialog({
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="category-icon">Icon</Label>
-            <Input
-              id="category-icon"
-              value={icon}
-              onChange={(e) => setIcon(e.target.value)}
-              placeholder="Optional, e.g. an emoji"
-            />
+            <Label>Icon</Label>
+            <CategoryIconPicker value={icon} onChange={setIcon} />
           </div>
         </div>
       </div>

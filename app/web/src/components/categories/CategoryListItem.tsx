@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Category } from "@/lib/types"
 import { Pencil, Trash2 } from "lucide-react"
+import { CategoryIcon } from "./CategoryIcon"
 
 export type { Category }
 
@@ -32,8 +33,14 @@ export function CategoryListItem({ category, onEdit, onDelete }: Props) {
             created {formatDate(category.created_at)}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {category.icon && <Badge variant="secondary">{category.icon}</Badge>}
-            <Badge variant="outline">{category.color}</Badge>
+            {category.icon && (
+              <Badge variant="secondary">
+                <span style={{ color: category.color }}>
+                  <CategoryIcon name={category.icon} className="size-3" />
+                </span>
+                {category.icon}
+              </Badge>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">

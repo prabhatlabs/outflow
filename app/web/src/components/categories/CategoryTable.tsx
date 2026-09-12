@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Pencil, Trash2 } from "lucide-react"
+import { CategoryIcon } from "./CategoryIcon"
 import type { Category } from "./CategoryListItem"
 
 type Props = {
@@ -47,7 +48,14 @@ export function CategoryTable({ categories, onEdit, onDelete }: Props) {
             </TableCell>
             <TableCell>
               {category.icon ? (
-                <Badge variant="secondary">{category.icon}</Badge>
+                <span className="flex items-center gap-1.5">
+                  <span style={{ color: category.color }}>
+                    <CategoryIcon name={category.icon} className="size-4" />
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {category.icon}
+                  </span>
+                </span>
               ) : (
                 "—"
               )}
