@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatDateTime } from "@/lib/format";
 import type { Group } from "@/lib/types";
 import { useDialogStore } from "@/store/dialog";
 import { useGroupsStore } from "@/store/groups";
@@ -17,11 +18,6 @@ import { Link } from "react-router";
 type Props = {
   groups: Group[];
 };
-
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  return value.slice(0, 10);
-}
 
 export function GroupTable({ groups }: Props) {
   const archiveGroup = useGroupsStore((s) => s.archiveGroup);
@@ -75,7 +71,7 @@ export function GroupTable({ groups }: Props) {
               <Badge variant="secondary">{group.type}</Badge>
             </TableCell>
             <TableCell>{group.default_currency}</TableCell>
-            <TableCell>{formatDate(group.created_at)}</TableCell>
+            <TableCell>{formatDateTime(group.created_at)}</TableCell>
             <TableCell>
               {group.is_archived ? (
                 <Badge variant="destructive">archived</Badge>

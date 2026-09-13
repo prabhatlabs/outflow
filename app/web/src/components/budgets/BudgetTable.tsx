@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatDate } from "@/lib/format";
 import { Pencil, Trash2 } from "lucide-react";
 import type { Budget } from "./BudgetListItem";
 
@@ -16,11 +17,6 @@ type Props = {
   onEdit: (budget: Budget) => void;
   onDelete: (budget: Budget) => void;
 };
-
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  return value.slice(0, 10);
-}
 
 export function BudgetTable({ budgets, onEdit, onDelete }: Props) {
   return (

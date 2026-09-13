@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { formatAmount, formatDate } from "@/lib/format"
 import type { Category, Expense } from "@/lib/types"
 import { Archive, ArchiveRestore, Eye, Pencil, Trash2 } from "lucide-react"
 import { CategoryVisual } from "@/components/categories/CategoryVisual"
@@ -17,17 +18,6 @@ type Props = {
   onDelete: (expense: Expense) => void
   onArchive: (expense: Expense) => void
   onUnarchive: (expense: Expense) => void
-}
-
-export function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-  }).format(amount)
-}
-
-export function formatDate(value: string) {
-  return value.slice(0, 10)
 }
 
 export function ExpenseListItem({

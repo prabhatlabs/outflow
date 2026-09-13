@@ -10,19 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { formatAmount } from "@/lib/format"
 import { useBalancesStore } from "@/store/balances"
 import { useGroupsStore } from "@/store/groups"
 import { cn } from "cn"
 import { HandCoins } from "lucide-react"
 import { useEffect } from "react"
 import { Link, useParams } from "react-router"
-
-function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-  }).format(amount)
-}
 
 export function BalancesPage() {
   const { groupId } = useParams()

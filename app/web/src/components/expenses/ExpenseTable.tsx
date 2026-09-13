@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/table"
 import type { Category } from "@/lib/types"
 import { Archive, ArchiveRestore, Eye, Pencil, Trash2 } from "lucide-react"
-import { formatAmount, formatDate, type Expense } from "./ExpenseListItem"
+import { formatAmount } from "@/lib/format"
+import { type Expense } from "./ExpenseListItem"
+import { formatDate } from "@/lib/format"
 
 type Props = {
   expenses: Expense[]

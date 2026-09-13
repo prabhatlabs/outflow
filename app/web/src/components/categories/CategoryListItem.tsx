@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { formatDateTime } from "@/lib/format"
 import type { Category } from "@/lib/types"
 import { Pencil, Trash2 } from "lucide-react"
 import { CategoryVisual } from "./CategoryVisual"
@@ -10,10 +11,6 @@ type Props = {
   category: Category
   onEdit: (category: Category) => void
   onDelete: (category: Category) => void
-}
-
-function formatDate(value: string) {
-  return value.slice(0, 10)
 }
 
 export function CategoryListItem({ category, onEdit, onDelete }: Props) {
@@ -28,7 +25,7 @@ export function CategoryListItem({ category, onEdit, onDelete }: Props) {
           <div className="min-w-0">
             <p className="truncate font-medium">{category.name}</p>
             <p className="truncate text-sm text-muted-foreground">
-              created {formatDate(category.created_at)}
+              created {formatDateTime(category.created_at)}
             </p>
           </div>
         </div>

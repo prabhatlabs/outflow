@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { formatDate, formatAmount } from "@/lib/format"
 import type { GroupMemberWithUser, Settlement } from "@/lib/types"
 import { ArrowRight, Trash2 } from "lucide-react"
 
@@ -17,17 +18,6 @@ function memberName(members: GroupMemberWithUser[], userId: string) {
   const member = members.find((m) => m.user_id === userId)
   if (member) return [member.first_name, member.last_name].filter(Boolean).join(" ")
   return userId.slice(0, 8)
-}
-
-function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-  }).format(amount)
-}
-
-function formatDate(value: string) {
-  return value.slice(0, 10)
 }
 
 export function SettlementListItem({

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDate } from "@/lib/format";
 import type { GroupBudget, PersonalBudget } from "@/lib/types";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -11,11 +12,6 @@ type Props = {
   onEdit: (budget: Budget) => void;
   onDelete: (budget: Budget) => void;
 };
-
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  return value.slice(0, 10);
-}
 
 export function BudgetListItem({ budget, onEdit, onDelete }: Props) {
   return (

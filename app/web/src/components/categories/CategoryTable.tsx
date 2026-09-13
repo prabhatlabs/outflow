@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { formatDateTime } from "@/lib/format"
 import { Pencil, Trash2 } from "lucide-react"
 import { CategoryVisual } from "./CategoryVisual"
 import type { Category } from "./CategoryListItem"
@@ -15,10 +16,6 @@ type Props = {
   categories: Category[]
   onEdit: (category: Category) => void
   onDelete: (category: Category) => void
-}
-
-function formatDate(value: string) {
-  return value.slice(0, 10)
 }
 
 export function CategoryTable({ categories, onEdit, onDelete }: Props) {
@@ -48,7 +45,7 @@ export function CategoryTable({ categories, onEdit, onDelete }: Props) {
                 "—"
               )}
             </TableCell>
-            <TableCell>{formatDate(category.created_at)}</TableCell>
+            <TableCell>{formatDateTime(category.created_at)}</TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
                 <Button

@@ -6,18 +6,12 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/PageHeader"
+import { formatAmount } from "@/lib/format"
 import type { BalanceRow } from "@/lib/types"
 import { useBalancesStore } from "@/store/balances"
 import { useDialogStore } from "@/store/dialog"
 import { useGroupsStore } from "@/store/groups"
 import { useMembersStore } from "@/store/members"
-
-function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-  }).format(amount)
-}
 
 type Suggestion = {
   from: BalanceRow

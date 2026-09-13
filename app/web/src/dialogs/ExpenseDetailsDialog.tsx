@@ -1,10 +1,6 @@
 import { CategoryVisual } from "@/components/categories/CategoryVisual";
-// formatAmount/formatDate live with the list item so the detail dialog
-// always formats amounts and dates exactly like the list.
-import {
-  formatAmount,
-  formatDate,
-} from "@/components/expenses/ExpenseListItem";
+import { formatAmount } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

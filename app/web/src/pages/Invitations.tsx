@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/PageHeader"
+import { formatDateTime } from "@/lib/format"
 import { useDialogStore } from "@/store/dialog"
 import { useGroupsStore } from "@/store/groups"
 import { useMyInvitationsStore } from "@/store/invitations"
@@ -66,7 +67,7 @@ export default function Invitations() {
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">{inv.status}</Badge>
                   <span className="text-sm text-muted-foreground">
-                    expires {inv.expires_at?.slice(0, 10) ?? "—"}
+                    expires {formatDateTime(inv.expires_at)}
                   </span>
                 </div>
               </div>

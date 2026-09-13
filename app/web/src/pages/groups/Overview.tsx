@@ -3,19 +3,13 @@ import PageHeader from "@/components/PageHeader"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { formatDate, formatAmount } from "@/lib/format"
 import { useBalancesStore } from "@/store/balances"
 import { useExpensesStore } from "@/store/expenses"
 import { useGroupsStore } from "@/store/groups"
 import { useMembersStore } from "@/store/members"
 import { useEffect } from "react"
 import { Link, useParams } from "react-router"
-
-function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-  }).format(amount)
-}
 
 export function OverviewPage() {
   const { groupId } = useParams()
@@ -166,7 +160,7 @@ export function OverviewPage() {
                   {expense.description || "Expense"}
                 </p>
                 <p className="truncate text-sm text-muted-foreground">
-                  {expense.expense_date.slice(0, 10)}
+                  {formatDate(expense.expense_date)}
                 </p>
               </div>
               <p className="shrink-0 font-medium">

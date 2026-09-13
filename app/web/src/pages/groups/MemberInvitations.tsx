@@ -7,14 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/PageHeader"
+import { formatDateTime } from "@/lib/format"
 import type { Invitation } from "@/lib/types"
 import { useDialogStore } from "@/store/dialog"
 import { canManage, useGroupsStore } from "@/store/groups"
 import { useGroupInvitationsStore } from "@/store/invitations"
-
-function formatDate(value: string) {
-  return value.slice(0, 10)
-}
 
 export function MemberInvitationsPage() {
   const { groupId } = useParams()
@@ -108,7 +105,7 @@ export function MemberInvitationsPage() {
                 <div className="min-w-0">
                   <p className="truncate font-medium">{invitation.email}</p>
                   <p className="truncate text-sm text-muted-foreground">
-                    expires {formatDate(invitation.expires_at)}
+                    expires {formatDateTime(invitation.expires_at)}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Badge variant="secondary">{invitation.status}</Badge>
