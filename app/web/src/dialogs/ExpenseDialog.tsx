@@ -21,7 +21,6 @@ import { Textarea } from "@/components/ui/textarea";
 import type {
   CreateExpenseInput,
   ExpenseSplitInput,
-  GroupMemberWithUser,
   SplitType,
 } from "@/lib/types";
 import { useAuthStore } from "@/store/auth";
@@ -32,6 +31,7 @@ import { useExpensesStore } from "@/store/expenses";
 import { useMembersStore } from "@/store/members";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DialogPayloadMap } from "./types";
+import { memberName } from "@/lib/format";
 
 const SPLIT_TYPES: SplitType[] = ["equal", "percentage", "exact", "shares"];
 
@@ -39,10 +39,6 @@ const DEFAULT_PAYER_VALUE = "__default__";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
-}
-
-function memberName(m: GroupMemberWithUser) {
-  return [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email;
 }
 
 export function ExpenseDialog({
@@ -62,6 +58,7 @@ export function ExpenseDialog({
   const expenses = useExpensesStore((s) => s.items);
 
   const members = useMembersStore((s) => s.items);
+  const getMemberNameByUserId = useMembersStore((s) => s.getMemberNameByUserId);
   const membersStatus = useMembersStore((s) => s.status);
   const fetchMembers = useMembersStore((s) => s.fetch);
 
@@ -128,9 +125,7 @@ export function ExpenseDialog({
               next[s.user_id] = s.shares == null ? "" : String(s.shares);
             else if (d.split_type === "equal") nextChecked[s.user_id] = true;
           }
-          setValues((prev) =>
-            Object.keys(prev).length > 0 ? prev : next,
-          );
+          setValues((prev) => (Object.keys(prev).length > 0 ? prev : next));
           setChecked((prev) =>
             Object.keys(prev).length > 0 ? prev : nextChecked,
           );
@@ -198,13 +193,6 @@ export function ExpenseDialog({
           return { user_id: m.user_id, percentage: v };
         return { user_id: m.user_id, shares: v };
       });
-  };
-
-  const getMemberName = (userId: string) => {
-    const m = activeMembers.find((m) => m.user_id === userId);
-    return m?.last_name
-      ? `${m.first_name} ${m.last_name}`
-      : (m?.first_name ?? m.email ?? "");
   };
 
   const handleSubmit = async () => {
@@ -317,7 +305,7 @@ export function ExpenseDialog({
                 {paidBy === "" ? (
                   <SelectValue placeholder="Me (default)" />
                 ) : (
-                  getMemberName(paidBy)
+                  getMemberNameByUserId(paidBy)
                 )}
               </SelectTrigger>
               <SelectContent>
@@ -326,7 +314,7 @@ export function ExpenseDialog({
                 </SelectItem>
                 {activeMembers.map((m) => (
                   <SelectItem key={m.user_id} value={m.user_id}>
-                    {memberName(m)}
+                    {memberName(m.first_name, m.last_name, m.email)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -407,7 +395,7 @@ export function ExpenseDialog({
                   className="w-28"
                 />
               )}
-              <span className="truncate text-sm">{memberName(m)}</span>
+              <span className="truncate text-sm">{memberName(m.first_name, m.last_name, m.email)}</span>
             </div>
           ))}
           {activeMembers.length === 0 && (

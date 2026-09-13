@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { api } from "@/lib/api"
 import type { GroupMemberWithUser } from "@/lib/types"
+import { memberName } from "@/lib/format"
 
 export type MembersStatus = "idle" | "loading" | "success" | "error"
 
@@ -20,6 +21,7 @@ type MembersState = {
     memberId: string,
     role: "admin" | "member",
   ) => Promise<GroupMemberWithUser>
+  getMemberNameByUserId: (memberId: string) => string
   remove: (groupId: string, memberId: string) => Promise<void>
   leave: (groupId: string) => Promise<void>
   clear: () => void
@@ -84,6 +86,11 @@ export const useMembersStore = create<MembersState>((set, get) => ({
     )
     set({ items: get().items.map((m) => (m.id === memberId ? { ...m, ...member } : m)) })
     return member
+  },
+
+  getMemberNameByUserId: (memberId: string) => {
+    const m = get().items.find((m) => m.user_id === memberId)
+    return m ? memberName(m.first_name, m.last_name, m.email) : ""
   },
 
   remove: async (groupId, memberId) => {

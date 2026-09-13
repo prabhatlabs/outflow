@@ -1,4 +1,5 @@
 import { BannerCard } from "@/components/BannerCard";
+import { CategoryPicker } from "@/components/categories/CategoryPicker";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import type { Expense } from "@/components/expenses/ExpenseListItem";
 import { ExpenseTable } from "@/components/expenses/ExpenseTable";
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { memberName } from "@/lib/format";
 import type { ExpenseFilters } from "@/lib/types";
 import { useCategoriesStore } from "@/store/categories";
 import { useDialogStore } from "@/store/dialog";
@@ -25,10 +27,6 @@ import { useViewModeStore } from "@/store/viewMode";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-
-function memberName(first: string, last: string | null, email: string) {
-  return [first, last].filter(Boolean).join(" ") || email;
-}
 
 export function ExpensesPage() {
   const { groupId } = useParams();
@@ -47,6 +45,7 @@ export function ExpensesPage() {
   const remove = useExpensesStore((s) => s.remove);
 
   const members = useMembersStore((s) => s.items);
+  const getMemberNameByUserId = useMembersStore((s) => s.getMemberNameByUserId);
   const membersStatus = useMembersStore((s) => s.status);
   const fetchMembers = useMembersStore((s) => s.fetch);
 
@@ -151,35 +150,30 @@ export function ExpensesPage() {
 
       <div className="grid gap-3 rounded-2xl bg-card border p-3 sm:grid-cols-2 lg:grid-cols-6">
         <div className="grid gap-1.5">
-          <Label>Category</Label>
-          <Select
-            value={categoryId === "" ? "all" : categoryId}
-            onValueChange={(v) => setCategoryId(v === "all" ? "" : (v ?? ""))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="expense-category">Category</Label>
+          <CategoryPicker
+            id="expense-category"
+            noneLabel="All categories"
+            value={categoryId}
+            onChange={setCategoryId}
+            categories={categories}
+          />
         </div>
         <div className="grid gap-1.5">
-          <Label>Paid by</Label>
+          <Label htmlFor="expense-paid-by">Paid by</Label>
           <Select
-            value={paidBy === "" ? "all" : paidBy}
+            value={paidBy === "" ? "All" : paidBy}
             onValueChange={(v) => setPaidBy(v === "all" ? "" : (v ?? ""))}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All" />
+            <SelectTrigger id="expense-paid-by" className="w-full">
+              {paidBy === "" ? (
+                <SelectValue placeholder="All" />
+              ) : (
+                getMemberNameByUserId(paidBy)
+              )}
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value={"all"}>All</SelectItem>
               {members.map((m) => (
                 <SelectItem key={m.user_id} value={m.user_id}>
                   {memberName(m.first_name, m.last_name, m.email)}
@@ -214,10 +208,7 @@ export function ExpensesPage() {
             }}
             variant={"outline"}
           >
-            <Checkbox
-              id="expenses-archived"
-              checked={includeArchived}
-            />
+            <Checkbox id="expenses-archived" checked={includeArchived} />
             {includeArchived ? "Showing" : "Hidden"}
           </Button>
         </div>
