@@ -7,6 +7,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type { GroupType } from "@/lib/types"
 import { useDialogStore } from "@/store/dialog"
@@ -106,17 +113,21 @@ export function CreateGroupDialog({
         <div className="grid grid-cols-2 gap-3">
           <label className="grid gap-1.5">
             <span className="text-sm font-medium">Type</span>
-            <select
+            <Select
               value={type}
-              onChange={(e) => setType(e.target.value as GroupType)}
-              className="h-9 w-full rounded-3xl border border-transparent bg-input/50 px-3 text-sm outline-none focus-visible:border-ring"
+              onValueChange={(v) => setType(v as GroupType)}
             >
-              {GROUP_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GROUP_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
 
           <label className="grid gap-1.5">

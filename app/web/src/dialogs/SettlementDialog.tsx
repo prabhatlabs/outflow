@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   DialogDescription,
   DialogFooter,
@@ -8,6 +9,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import type {
   CreateSettlementInput,
@@ -30,8 +38,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
   "other",
 ]
 
-const SELECT_CLASS =
-  "h-9 w-full rounded-3xl border border-transparent bg-input/50 px-3 text-sm outline-none focus-visible:border-ring"
+const NO_MEMBER_VALUE = "__none__"
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -145,35 +152,47 @@ export function SettlementDialog({
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="settlement-from">From</Label>
-            <select
-              id="settlement-from"
-              value={fromUser}
-              onChange={(e) => setFromUser(e.target.value)}
-              className={SELECT_CLASS}
+            <Select
+              value={fromUser === "" ? NO_MEMBER_VALUE : fromUser}
+              onValueChange={(v) =>
+                setFromUser(v === NO_MEMBER_VALUE ? "" : (v ?? ""))
+              }
             >
-              <option value="">Select member</option>
-              {activeMembers.map((m) => (
-                <option key={m.user_id} value={m.user_id}>
-                  {memberName(m)}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="settlement-from" className="w-full">
+                <SelectValue placeholder="Select member" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_MEMBER_VALUE}>
+                  Select member
+                </SelectItem>
+                {activeMembers.map((m) => (
+                  <SelectItem key={m.user_id} value={m.user_id}>
+                    {memberName(m)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="settlement-to">To</Label>
-            <select
-              id="settlement-to"
-              value={toUser}
-              onChange={(e) => setToUser(e.target.value)}
-              className={SELECT_CLASS}
+            <Select
+              value={toUser === "" ? NO_MEMBER_VALUE : toUser}
+              onValueChange={(v) =>
+                setToUser(v === NO_MEMBER_VALUE ? "" : (v ?? ""))
+              }
             >
-              <option value="">Select member</option>
-              {activeMembers.map((m) => (
-                <option key={m.user_id} value={m.user_id}>
-                  {memberName(m)}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="settlement-to" className="w-full">
+                <SelectValue placeholder="Select member" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_MEMBER_VALUE}>Select member</SelectItem>
+                {activeMembers.map((m) => (
+                  <SelectItem key={m.user_id} value={m.user_id}>
+                    {memberName(m)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -193,29 +212,27 @@ export function SettlementDialog({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="settlement-date">Date</Label>
-            <Input
-              id="settlement-date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+            <DatePicker id="settlement-date" value={date} onChange={setDate} />
           </div>
         </div>
 
         <div className="grid gap-1.5">
           <Label htmlFor="settlement-method">Payment method</Label>
-          <select
-            id="settlement-method"
+          <Select
             value={method}
-            onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-            className={SELECT_CLASS}
+            onValueChange={(v) => setMethod(v as PaymentMethod)}
           >
-            {PAYMENT_METHODS.map((m) => (
-              <option key={m} value={m}>
-                {m.replace("_", " ")}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger id="settlement-method" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAYMENT_METHODS.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m.replace("_", " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid gap-1.5">

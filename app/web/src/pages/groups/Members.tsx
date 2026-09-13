@@ -1,46 +1,46 @@
-import { Mail, UserPlus } from "lucide-react"
-import { useEffect } from "react"
-import { Link, useNavigate, useParams } from "react-router"
-import { BannerCard } from "@/components/BannerCard"
-import { MemberList } from "@/components/members/MemberList"
-import type { Member } from "@/components/members/MemberListItem"
-import { MemberTable } from "@/components/members/MemberTable"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import PageHeader from "@/components/PageHeader"
-import { useAuthStore } from "@/store/auth"
-import { useDialogStore } from "@/store/dialog"
-import { canManage, useGroupsStore } from "@/store/groups"
-import { useMembersStore } from "@/store/members"
-import { useViewModeStore } from "@/store/viewMode"
+import { BannerCard } from "@/components/BannerCard";
+import { MemberList } from "@/components/members/MemberList";
+import type { Member } from "@/components/members/MemberListItem";
+import { MemberTable } from "@/components/members/MemberTable";
+import PageHeader from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthStore } from "@/store/auth";
+import { useDialogStore } from "@/store/dialog";
+import { canManage, useGroupsStore } from "@/store/groups";
+import { useMembersStore } from "@/store/members";
+import { useViewModeStore } from "@/store/viewMode";
+import { Mail, UserPlus } from "lucide-react";
+import { useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 
 export function MembersPage() {
-  const { groupId } = useParams()
-  const navigate = useNavigate()
+  const { groupId } = useParams();
+  const navigate = useNavigate();
 
-  const currentGroup = useGroupsStore((s) => s.currentGroup)
-  const user = useAuthStore((s) => s.user)
+  const currentGroup = useGroupsStore((s) => s.currentGroup);
+  const user = useAuthStore((s) => s.user);
 
-  const items = useMembersStore((s) => s.items)
-  const status = useMembersStore((s) => s.status)
-  const error = useMembersStore((s) => s.error)
-  const hasMore = useMembersStore((s) => s.hasMore)
-  const fetch = useMembersStore((s) => s.fetch)
-  const fetchMore = useMembersStore((s) => s.fetchMore)
-  const updateRole = useMembersStore((s) => s.updateRole)
-  const remove = useMembersStore((s) => s.remove)
-  const leave = useMembersStore((s) => s.leave)
+  const items = useMembersStore((s) => s.items);
+  const status = useMembersStore((s) => s.status);
+  const error = useMembersStore((s) => s.error);
+  const hasMore = useMembersStore((s) => s.hasMore);
+  const fetch = useMembersStore((s) => s.fetch);
+  const fetchMore = useMembersStore((s) => s.fetchMore);
+  const updateRole = useMembersStore((s) => s.updateRole);
+  const remove = useMembersStore((s) => s.remove);
+  const leave = useMembersStore((s) => s.leave);
 
   useEffect(() => {
-    if (groupId && status === "idle") fetch(groupId)
-  }, [groupId, status, fetch])
+    if (groupId && status === "idle") fetch(groupId);
+  }, [groupId, status, fetch]);
 
-  const mode = useViewModeStore((s) => s.mode)
-  const manage = canManage(currentGroup)
+  const mode = useViewModeStore((s) => s.mode);
+  const manage = canManage(currentGroup);
 
   const handleChangeRole = (member: Member) => {
-    if (!groupId || member.role === "owner") return
-    const role = member.role === "admin" ? "member" : "admin"
+    if (!groupId || member.role === "owner") return;
+    const role = member.role === "admin" ? "member" : "admin";
     useDialogStore.getState().open("confirm", {
       title: `Make ${member.first_name} ${role}?`,
       description:
@@ -49,40 +49,40 @@ export function MembersPage() {
           : "Members can add and share expenses.",
       confirmLabel: "Change role",
       onConfirm: () => {
-        void updateRole(groupId, member.id, role)
+        void updateRole(groupId, member.id, role);
       },
-    })
-  }
+    });
+  };
 
   const handleRemove = (member: Member) => {
-    if (!groupId) return
+    if (!groupId) return;
     useDialogStore.getState().open("confirm", {
       title: `Remove ${member.first_name}?`,
       description: "This cannot be undone.",
       destructive: true,
       confirmLabel: "Remove",
       onConfirm: () => remove(groupId, member.id),
-    })
-  }
+    });
+  };
 
   const handleLeave = () => {
-    if (!groupId || !user) return
+    if (!groupId || !user) return;
     useDialogStore.getState().open("confirm", {
       title: "Leave group?",
       description: "You will lose access to this group.",
       destructive: true,
       confirmLabel: "Leave",
       onConfirm: async () => {
-        await leave(groupId)
-        navigate("/")
+        await leave(groupId);
+        navigate("/");
       },
-    })
-  }
+    });
+  };
 
   const handleInvite = () => {
-    if (!groupId) return
-    useDialogStore.getState().open("inviteMember", { groupId })
-  }
+    if (!groupId) return;
+    useDialogStore.getState().open("inviteMember", { groupId });
+  };
 
   return (
     <div className="space-y-6">
@@ -97,12 +97,11 @@ export function MembersPage() {
                 Invite members
               </Button>
             )}
-            <Link
-              to={`/${groupId}/members/invitations`}
-              className={buttonVariants({ variant: "outline" })}
-            >
-              <Mail className="size-4" />
-              Invitations
+            <Link to={`/${groupId}/members/invitations`}>
+              <Button variant="outline">
+                <Mail className="size-4" />
+                Invitations
+              </Button>
             </Link>
             {user && (
               <Button variant="destructive" onClick={handleLeave}>
@@ -169,5 +168,5 @@ export function MembersPage() {
         </Button>
       )}
     </div>
-  )
+  );
 }

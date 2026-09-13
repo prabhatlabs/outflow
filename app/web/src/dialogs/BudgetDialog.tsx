@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   DialogDescription,
   DialogFooter,
@@ -142,20 +143,20 @@ export function BudgetDialog({
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="budget-start">Start date</Label>
-            <Input
+            <DatePicker
               id="budget-start"
-              type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={setStartDate}
+              placeholder="Start date"
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="budget-end">End date</Label>
-            <Input
+            <DatePicker
               id="budget-end"
-              type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={setEndDate}
+              placeholder="End date"
             />
           </div>
         </div>

@@ -49,7 +49,7 @@ export function ExpenseListItem({
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Badge variant="secondary">{expense.split_type}</Badge>
-            <Badge variant="outline">{expense.splits.length} split(s)</Badge>
+            <Badge variant="outline">{expense.splits?.length} split(s)</Badge>
             {expense.is_archived && (
               <Badge variant="destructive">archived</Badge>
             )}
