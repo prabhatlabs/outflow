@@ -249,6 +249,9 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		out.Splits = []db.ExpenseSplit{}
 	}
+	// CreateExpense ran before the splits were inserted, so its RETURNING *
+	// still carries the default count. Sync it with the stored value.
+	out.Expense.SplitsCount = int32(len(out.Splits))
 
 	response.Created(w, "Expense created successfully", out)
 }
@@ -354,7 +357,10 @@ func replaceSplits(ctx context.Context, q *db.Queries, expenseID pgtype.UUID, sp
 			return err
 		}
 	}
-	return nil
+	return q.UpdateExpenseSplitsCount(ctx, db.UpdateExpenseSplitsCountParams{
+		SplitsCount: int32(len(splits)),
+		ID:          expenseID,
+	})
 }
 
 func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {

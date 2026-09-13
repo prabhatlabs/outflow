@@ -4,6 +4,7 @@ export const DIALOGS = [
   "budget",
   "editProfile",
   "expense",
+  "expenseDetails",
   "settlement",
   "category",
   "inviteMember",
@@ -25,6 +26,7 @@ export type DialogPayloadMap = {
   budget: { budgetId?: string } | undefined
   editProfile: undefined
   expense: { groupId: string; expenseId?: string } | undefined
+  expenseDetails: { groupId: string; expenseId: string } | undefined
   settlement:
     | { groupId: string; fromUserId?: string; toUserId?: string; amount?: number }
     | undefined

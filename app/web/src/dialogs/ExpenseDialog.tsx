@@ -30,7 +30,7 @@ import { useCategoriesStore } from "@/store/categories";
 import { useDialogStore } from "@/store/dialog";
 import { useExpensesStore } from "@/store/expenses";
 import { useMembersStore } from "@/store/members";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DialogPayloadMap } from "./types";
 
 const SPLIT_TYPES: SplitType[] = ["equal", "percentage", "exact", "shares"];
@@ -58,6 +58,7 @@ export function ExpenseDialog({
 
   const create = useExpensesStore((s) => s.create);
   const edit = useExpensesStore((s) => s.edit);
+  const fetchOne = useExpensesStore((s) => s.fetchOne);
   const expenses = useExpensesStore((s) => s.items);
 
   const members = useMembersStore((s) => s.items);
@@ -99,26 +100,45 @@ export function ExpenseDialog({
   const [splitType, setSplitType] = useState<SplitType>(
     existing?.split_type ?? "equal",
   );
-  const [values, setValues] = useState<Record<string, string>>(() => {
-    if (!existing || !existing.splits) return {};
-    const next: Record<string, string> = {};
-    for (const s of existing.splits) {
-      if (existing.split_type === "exact")
-        next[s.user_id] = String(s.amount_owed);
-      else if (existing.split_type === "percentage")
-        next[s.user_id] = s.percentage == null ? "" : String(s.percentage);
-      else if (existing.split_type === "shares")
-        next[s.user_id] = s.shares == null ? "" : String(s.shares);
-    }
-    return next;
-  });
-  const [checked, setChecked] = useState<Record<string, boolean>>(() => {
-    if (!existing || existing.split_type !== "equal" || !existing.splits)
-      return {};
-    const next: Record<string, boolean> = {};
-    for (const s of existing.splits) next[s.user_id] = true;
-    return next;
-  });
+  // List rows carry splits_count but no splits array, so split values seed
+  // empty and are filled in by the detail fetch below in edit mode.
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const seededSplitsRef = useRef(false);
+
+  // Edit mode: fetch the full expense (with splits) once and prefill the
+  // split values/checkboxes from it. Never clobbers user input made before
+  // the fetch resolves.
+  useEffect(() => {
+    if (!isEdit || !payload?.expenseId || seededSplitsRef.current) return;
+    // Set synchronously so React strict mode can't double-fire.
+    seededSplitsRef.current = true;
+    void fetchOne(groupId, payload.expenseId).then(
+      (d) => {
+        if (d.splits) {
+          const next: Record<string, string> = {};
+          const nextChecked: Record<string, boolean> = {};
+          for (const s of d.splits) {
+            if (d.split_type === "exact")
+              next[s.user_id] = String(s.amount_owed);
+            else if (d.split_type === "percentage")
+              next[s.user_id] =
+                s.percentage == null ? "" : String(s.percentage);
+            else if (d.split_type === "shares")
+              next[s.user_id] = s.shares == null ? "" : String(s.shares);
+            else if (d.split_type === "equal") nextChecked[s.user_id] = true;
+          }
+          setValues((prev) =>
+            Object.keys(prev).length > 0 ? prev : next,
+          );
+          setChecked((prev) =>
+            Object.keys(prev).length > 0 ? prev : nextChecked,
+          );
+        }
+      },
+      () => {},
+    );
+  }, [isEdit, payload?.expenseId, groupId, fetchOne]);
   const [pending, setPending] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 

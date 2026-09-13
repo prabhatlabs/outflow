@@ -16,7 +16,7 @@ UPDATE expenses SET
     is_archived = TRUE,
     archived_at = NOW()
 WHERE id = $1
-RETURNING id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at
+RETURNING id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count
 `
 
 func (q *Queries) ArchiveExpense(ctx context.Context, id pgtype.UUID) (Expense, error) {
@@ -37,6 +37,7 @@ func (q *Queries) ArchiveExpense(ctx context.Context, id pgtype.UUID) (Expense, 
 		&i.ExpenseDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SplitsCount,
 	)
 	return i, err
 }
@@ -63,7 +64,7 @@ INSERT INTO expenses (
     $8,
     $9
 )
-RETURNING id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at
+RETURNING id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count
 `
 
 type CreateExpenseParams struct {
@@ -106,6 +107,7 @@ func (q *Queries) CreateExpense(ctx context.Context, arg CreateExpenseParams) (E
 		&i.ExpenseDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SplitsCount,
 	)
 	return i, err
 }
@@ -120,7 +122,7 @@ func (q *Queries) DeleteExpense(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getExpenseByID = `-- name: GetExpenseByID :one
-SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at FROM expenses WHERE id = $1
+SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count FROM expenses WHERE id = $1
 `
 
 func (q *Queries) GetExpenseByID(ctx context.Context, id pgtype.UUID) (Expense, error) {
@@ -141,12 +143,13 @@ func (q *Queries) GetExpenseByID(ctx context.Context, id pgtype.UUID) (Expense, 
 		&i.ExpenseDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SplitsCount,
 	)
 	return i, err
 }
 
 const listExpensesByGroupAndCategory = `-- name: ListExpensesByGroupAndCategory :many
-SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at FROM expenses
+SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count FROM expenses
 WHERE group_id = $1 AND category_id = $2 AND is_archived = FALSE
 ORDER BY expense_date DESC, created_at DESC
 LIMIT $4 OFFSET $3
@@ -188,6 +191,7 @@ func (q *Queries) ListExpensesByGroupAndCategory(ctx context.Context, arg ListEx
 			&i.ExpenseDate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SplitsCount,
 		); err != nil {
 			return nil, err
 		}
@@ -200,7 +204,7 @@ func (q *Queries) ListExpensesByGroupAndCategory(ctx context.Context, arg ListEx
 }
 
 const listExpensesByGroupID = `-- name: ListExpensesByGroupID :many
-SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at FROM expenses
+SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count FROM expenses
 WHERE group_id = $1 AND is_archived = FALSE
 ORDER BY expense_date DESC, created_at DESC
 LIMIT $3 OFFSET $2
@@ -236,6 +240,7 @@ func (q *Queries) ListExpensesByGroupID(ctx context.Context, arg ListExpensesByG
 			&i.ExpenseDate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SplitsCount,
 		); err != nil {
 			return nil, err
 		}
@@ -248,7 +253,7 @@ func (q *Queries) ListExpensesByGroupID(ctx context.Context, arg ListExpensesByG
 }
 
 const listExpensesByPaidBy = `-- name: ListExpensesByPaidBy :many
-SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at FROM expenses
+SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count FROM expenses
 WHERE paid_by = $1 AND is_archived = FALSE
 ORDER BY expense_date DESC, created_at DESC
 LIMIT $3 OFFSET $2
@@ -284,6 +289,7 @@ func (q *Queries) ListExpensesByPaidBy(ctx context.Context, arg ListExpensesByPa
 			&i.ExpenseDate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SplitsCount,
 		); err != nil {
 			return nil, err
 		}
@@ -300,7 +306,7 @@ UPDATE expenses SET
     is_archived = FALSE,
     archived_at = NULL
 WHERE id = $1
-RETURNING id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at
+RETURNING id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count
 `
 
 func (q *Queries) UnarchiveExpense(ctx context.Context, id pgtype.UUID) (Expense, error) {
@@ -321,6 +327,7 @@ func (q *Queries) UnarchiveExpense(ctx context.Context, id pgtype.UUID) (Expense
 		&i.ExpenseDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SplitsCount,
 	)
 	return i, err
 }
@@ -335,7 +342,7 @@ UPDATE expenses SET
     split_type = COALESCE($6, split_type),
     expense_date = COALESCE($7, expense_date)
 WHERE id = $8
-RETURNING id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at
+RETURNING id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count
 `
 
 type UpdateExpenseParams struct {
@@ -376,6 +383,21 @@ func (q *Queries) UpdateExpense(ctx context.Context, arg UpdateExpenseParams) (E
 		&i.ExpenseDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.SplitsCount,
 	)
 	return i, err
+}
+
+const updateExpenseSplitsCount = `-- name: UpdateExpenseSplitsCount :exec
+UPDATE expenses SET splits_count = $1 WHERE id = $2
+`
+
+type UpdateExpenseSplitsCountParams struct {
+	SplitsCount int32       `json:"splits_count"`
+	ID          pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateExpenseSplitsCount(ctx context.Context, arg UpdateExpenseSplitsCountParams) error {
+	_, err := q.db.Exec(ctx, updateExpenseSplitsCount, arg.SplitsCount, arg.ID)
+	return err
 }

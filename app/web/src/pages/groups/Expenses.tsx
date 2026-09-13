@@ -89,6 +89,9 @@ export function ExpensesPage() {
     return m ? memberName(m.first_name, m.last_name, m.email) : "Unknown";
   };
 
+  const categoryOf = (expense: Expense) =>
+    categories.find((c) => c.id === expense.category_id) ?? null;
+
   const applyFilters = () => {
     if (groupId) fetch(groupId, { filters, reset: true });
   };
@@ -96,6 +99,13 @@ export function ExpensesPage() {
   const handleNew = () => {
     if (!groupId) return;
     useDialogStore.getState().open("expense", { groupId });
+  };
+
+  const handleView = (expense: Expense) => {
+    if (!groupId) return;
+    useDialogStore
+      .getState()
+      .open("expenseDetails", { groupId, expenseId: expense.id });
   };
 
   const handleEdit = (expense: Expense) => {
@@ -256,6 +266,8 @@ export function ExpensesPage() {
             expenses={items}
             paidByName={paidByName}
             currency={currency}
+            categoryOf={categoryOf}
+            onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onArchive={handleArchive}
@@ -266,6 +278,8 @@ export function ExpensesPage() {
             expenses={items}
             paidByName={paidByName}
             currency={currency}
+            categoryOf={categoryOf}
+            onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onArchive={handleArchive}

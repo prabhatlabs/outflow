@@ -1,9 +1,12 @@
 import { ExpenseListItem, type Expense } from "./ExpenseListItem"
+import type { Category } from "@/lib/types"
 
 type Props = {
   expenses: Expense[]
   paidByName: (expense: Expense) => string
   currency: string
+  categoryOf: (expense: Expense) => Category | null
+  onView: (expense: Expense) => void
   onEdit: (expense: Expense) => void
   onDelete: (expense: Expense) => void
   onArchive: (expense: Expense) => void
@@ -14,6 +17,8 @@ export function ExpenseList({
   expenses,
   paidByName,
   currency,
+  categoryOf,
+  onView,
   onEdit,
   onDelete,
   onArchive,
@@ -27,6 +32,8 @@ export function ExpenseList({
           expense={expense}
           paidByName={paidByName(expense)}
           currency={currency}
+          categoryOf={categoryOf}
+          onView={onView}
           onEdit={onEdit}
           onDelete={onDelete}
           onArchive={onArchive}

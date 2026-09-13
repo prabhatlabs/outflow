@@ -5,6 +5,7 @@ import { CategoryDialog } from "./CategoryDialog"
 import { ConfirmDialog } from "./ConfirmDialog"
 import { CreateGroupDialog } from "./CreateGroupDialog"
 import { EditProfileDialog } from "./EditProfileDialog"
+import { ExpenseDetailsDialog } from "./ExpenseDetailsDialog"
 import { ExpenseDialog } from "./ExpenseDialog"
 import { GroupBudgetDialog } from "./GroupBudgetDialog"
 import { InviteMemberDialog } from "./InviteMemberDialog"
@@ -49,6 +50,12 @@ export function DialogHost() {
               <ExpenseDialog
                 id={d.id}
                 payload={d.payload as DialogPayloadMap["expense"]}
+              />
+            )}
+            {d.type === "expenseDetails" && (
+              <ExpenseDetailsDialog
+                id={d.id}
+                payload={d.payload as DialogPayloadMap["expenseDetails"]}
               />
             )}
             {d.type === "settlement" && (

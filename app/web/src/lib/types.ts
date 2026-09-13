@@ -71,6 +71,7 @@ export type Expense = {
   is_archived: boolean
   archived_at: string | null
   expense_date: string
+  splits_count: number
   created_at: string
   updated_at: string
 }

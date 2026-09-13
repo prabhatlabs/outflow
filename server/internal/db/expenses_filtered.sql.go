@@ -12,7 +12,7 @@ import (
 )
 
 const listExpensesByGroupFiltered = `-- name: ListExpensesByGroupFiltered :many
-SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at FROM expenses
+SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count FROM expenses
 WHERE group_id = $1
   AND ($2::uuid IS NULL OR category_id = $2)
   AND ($3::uuid IS NULL OR paid_by = $3)
@@ -67,6 +67,7 @@ func (q *Queries) ListExpensesByGroupFiltered(ctx context.Context, arg ListExpen
 			&i.ExpenseDate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.SplitsCount,
 		); err != nil {
 			return nil, err
 		}

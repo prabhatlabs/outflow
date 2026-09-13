@@ -3,6 +3,7 @@ import { api } from "@/lib/api"
 import type {
   CreateExpenseInput,
   EditExpenseInput,
+  Expense,
   ExpenseFilters,
   ExpenseWithSplits,
 } from "@/lib/types"
@@ -28,7 +29,7 @@ function buildQS(
 }
 
 type ExpensesState = {
-  items: ExpenseWithSplits[]
+  items: Expense[]
   status: ExpensesStatus
   error: string | null
   limit: number
@@ -49,8 +50,8 @@ type ExpensesState = {
     id: string,
     patch: EditExpenseInput,
   ) => Promise<ExpenseWithSplits>
-  archive: (groupId: string, id: string) => Promise<ExpenseWithSplits>
-  unarchive: (groupId: string, id: string) => Promise<ExpenseWithSplits>
+  archive: (groupId: string, id: string) => Promise<Expense>
+  unarchive: (groupId: string, id: string) => Promise<Expense>
   remove: (groupId: string, id: string) => Promise<void>
   clear: () => void
 }
@@ -73,9 +74,7 @@ export const useExpensesStore = create<ExpensesState>((set, get) => ({
 
     try {
       const items =
-        (await api.get<ExpenseWithSplits[]>(
-          `/groups/${groupId}/expenses?${qs}`,
-        )) ?? []
+        (await api.get<Expense[]>(`/groups/${groupId}/expenses?${qs}`)) ?? []
 
       if (reset) {
         set({
@@ -139,7 +138,7 @@ export const useExpensesStore = create<ExpensesState>((set, get) => ({
   },
 
   archive: async (groupId, id) => {
-    const expense = await api.post<ExpenseWithSplits>(
+    const expense = await api.post<Expense>(
       `/groups/${groupId}/expenses/${id}/archive`,
     )
     set({ items: get().items.map((e) => (e.id === id ? expense : e)) })
@@ -147,7 +146,7 @@ export const useExpensesStore = create<ExpensesState>((set, get) => ({
   },
 
   unarchive: async (groupId, id) => {
-    const expense = await api.post<ExpenseWithSplits>(
+    const expense = await api.post<Expense>(
       `/groups/${groupId}/expenses/${id}/unarchive`,
     )
     set({ items: get().items.map((e) => (e.id === id ? expense : e)) })

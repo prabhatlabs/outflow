@@ -55,6 +55,9 @@ UPDATE expenses SET
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
+-- name: UpdateExpenseSplitsCount :exec
+UPDATE expenses SET splits_count = sqlc.arg(splits_count) WHERE id = sqlc.arg(id);
+
 -- name: ArchiveExpense :one
 UPDATE expenses SET
     is_archived = TRUE,
