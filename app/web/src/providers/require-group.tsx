@@ -19,6 +19,7 @@ function clearGroupScopedStores() {
   useGroupInvitationsStore.getState().clear();
   useMembersStore.getState().clear();
   useSettlementsStore.getState().clear();
+  useGroupsStore.getState().clearOverview();
 }
 
 // Syncs the :groupId URL param into the groups store. The URL is the source

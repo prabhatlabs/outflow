@@ -1,6 +1,12 @@
 import { create } from "zustand"
 import { api } from "@/lib/api"
-import type { Group, GroupMemberRole, GroupType } from "@/lib/types"
+import type {
+  Group,
+  GroupMemberRole,
+  GroupOverview,
+  GroupType,
+  OverviewPeriod,
+} from "@/lib/types"
 
 export type GroupsStatus = "idle" | "loading" | "success" | "error"
 
@@ -25,12 +31,18 @@ type GroupsState = {
   currentGroup: Group | null
   status: GroupsStatus
   error: string | null
+  overview: GroupOverview | null
+  overviewStatus: GroupsStatus
+  overviewPeriod: OverviewPeriod
+  overviewError: string | null
   fetchGroups: () => Promise<void>
   fetchGroupById: (id: string) => Promise<Group>
   createGroup: (input: CreateGroupInput) => Promise<Group>
   editGroup: (id: string, patch: EditGroupInput) => Promise<Group>
   archiveGroup: (id: string) => Promise<Group>
   unarchiveGroup: (id: string) => Promise<Group>
+  fetchOverview: (groupId: string, period: OverviewPeriod) => Promise<void>
+  clearOverview: () => void
   setGroups: (groups: Group[]) => void
   setCurrentGroup: (group: Group | null) => void
   setCurrentGroupById: (id: string) => void
@@ -42,6 +54,10 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
   currentGroup: null,
   status: "idle",
   error: null,
+  overview: null,
+  overviewStatus: "idle",
+  overviewError: null,
+  overviewPeriod: "30d",
 
   fetchGroups: async () => {
     set({ status: "loading", error: null })
@@ -167,6 +183,24 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
     }
   },
 
+  fetchOverview: async (groupId, period) => {
+    set({ overviewStatus: "loading", overviewError: null, overviewPeriod: period })
+    try {
+      const overview = await api.get<GroupOverview>(
+        `/groups/${groupId}/overview?period=${period}`,
+      )
+      set({ overview, overviewStatus: "success" })
+    } catch (err) {
+      set({
+        overviewStatus: "error",
+        overviewError: err instanceof Error ? err.message : "Failed to fetch overview",
+      })
+    }
+  },
+
+  clearOverview: () =>
+    set({ overview: null, overviewStatus: "idle", overviewError: null }),
+
   setCurrentGroup: (group) => set({ currentGroup: group }),
 
   setCurrentGroupById: (id) => {
@@ -175,7 +209,15 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
   },
 
   clearGroups: () =>
-    set({ groups: [], currentGroup: null, status: "idle", error: null }),
+    set({
+      groups: [],
+      currentGroup: null,
+      status: "idle",
+      error: null,
+      overview: null,
+      overviewStatus: "idle",
+      overviewError: null,
+    }),
 }))
 
 // Role helpers for owner/admin-gated UI.

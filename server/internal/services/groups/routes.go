@@ -31,6 +31,7 @@ func GroupsRouter(database *lib.DB) *chi.Mux {
 		r.With(lib.RequireGroupOwner(database)).Patch("/unarchive", s.unarchiveHandler)
 
 		r.Get("/", s.getHandler)
+		r.Get("/overview", s.overviewHandler)
 		r.Get("/balances", s.balancesHandler)
 		r.Mount("/categories", categories.CategoriesRouter(database))
 		r.Mount("/expenses", expenses.ExpensesRouter(database))

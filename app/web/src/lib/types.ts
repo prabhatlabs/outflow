@@ -204,6 +204,67 @@ export type CreateBudgetInput = {
 
 export type EditBudgetInput = Partial<CreateBudgetInput>
 
+export type OverviewPeriod = "today" | "7d" | "30d"
+
+export type OverviewStats = {
+  expense_count: number
+  total_amount: number
+  avg_amount: number
+  avg_per_day: number
+  settlement_count: number
+  settlement_amount: number
+  member_count: number
+  category_count: number
+}
+
+export type OverviewCategoryBreakdown = {
+  category_id: string | null
+  category_name: string
+  color: string
+  icon: string | null
+  count: number
+  total: number
+  percentage: number
+}
+
+export type OverviewMemberPaid = {
+  user_id: string
+  first_name: string
+  last_name: string | null
+  count: number
+  total: number
+  percentage: number
+}
+
+export type OverviewMemberOwed = {
+  user_id: string
+  first_name: string
+  last_name: string | null
+  total_owed: number
+  percentage: number
+}
+
+export type OverviewDailyPoint = {
+  date: string
+  count: number
+  total: number
+}
+
+export type GroupOverview = {
+  period: OverviewPeriod
+  from_date: string
+  to_date: string
+  timezone: string
+  currency: string
+  stats: OverviewStats
+  by_category: OverviewCategoryBreakdown[]
+  by_member_paid: OverviewMemberPaid[]
+  by_member_owed: OverviewMemberOwed[]
+  daily: OverviewDailyPoint[]
+  recent_expenses: Expense[]
+  balances: BalanceRow[]
+}
+
 export type GroupMemberStatus = "invited" | "active" | "left" | "removed"
 
 export type GroupMember = {

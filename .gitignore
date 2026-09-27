@@ -1,7 +1,9 @@
 .opencode
 plan
 *.env
-config.ymal
+config.yaml
+prod.env
+!.env.example
 
 # Go backend build output (server/Makefile `build` target)
 # the compiled binary is literally named `outflow`, so anchor the path
