@@ -24,5 +24,5 @@ func ServerInfoLog(message string) {
 		file = "???"
 		line = 0
 	}
-	log.Printf("[INFO] %s:%d | msg=%s", file, line, message)
+	log.Printf("\n\n[INFO] %s:%d | msg=%s\n\n", file, line, message)
 }

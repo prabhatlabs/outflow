@@ -169,10 +169,12 @@ function GroupSwitcher() {
   const { currentGroup, setCurrentGroupById, groups, status } =
     useGroupsStore();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const handleSelect = (id: string) => {
     setCurrentGroupById(id);
-    navigate(`/${id}/overview`);
+    const currentGrpLvlPath = pathname.split("/")[2];
+    navigate(`/${id}/${currentGrpLvlPath}`);
   };
 
   return status == "loading" && groups.length == 0 ? (

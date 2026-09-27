@@ -75,7 +75,7 @@ func renderMagicLink(to, url, ttlText string) (Message, error) {
 
 // SendMagicLink sends the email-magic-link sign-in email.
 func SendMagicLink(to, url string, ttlMinutes int) error {
-	log.ServerInfoLog(fmt.Sprintf("Sending magic link to %s", to))
+	log.ServerInfoLog(fmt.Sprintf("Sending magic link: %s", url))
 	msg, err := renderMagicLink(to, url, fmt.Sprintf("%d minutes", ttlMinutes))
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func SendMagicLink(to, url string, ttlMinutes int) error {
 
 // SendInvite notifies someone they were invited to a group.
 func SendInvite(to, groupName, inviterName, url string, ttlDays int) error {
-	log.ServerInfoLog(fmt.Sprintf("Sending invite to %s", to))
+	log.ServerInfoLog(fmt.Sprintf("Sending invite link: %s", url))
 
 	expiry := fmt.Sprintf("%d days", ttlDays)
 	intro := fmt.Sprintf("%s invited you to join \"%s\" on outflow.lol. This invitation expires in %s.", inviterName, groupName, expiry)
