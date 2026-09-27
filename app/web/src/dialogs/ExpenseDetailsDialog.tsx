@@ -1,6 +1,5 @@
 import { CategoryVisual } from "@/components/categories/CategoryVisual";
-import { formatAmount } from "@/lib/format";
-import { formatDate } from "@/lib/format";
+import { formatAmount, formatDate, memberName, splitExtra } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,11 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type {
-  ExpenseSplit,
-  ExpenseWithSplits,
-  GroupMemberWithUser,
-} from "@/lib/types";
+import type { ExpenseWithSplits } from "@/lib/types";
 import { useCategoriesStore } from "@/store/categories";
 import { useDialogStore } from "@/store/dialog";
 import { useExpensesStore } from "@/store/expenses";
@@ -21,18 +16,6 @@ import { useGroupsStore } from "@/store/groups";
 import { useMembersStore } from "@/store/members";
 import { useEffect, useState } from "react";
 import type { DialogPayloadMap } from "./types";
-
-function memberName(m: GroupMemberWithUser | undefined, fallback: string) {
-  if (!m) return fallback;
-  return [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email;
-}
-
-function splitExtra(split: ExpenseSplit) {
-  if (split.percentage != null) return `${split.percentage}%`;
-  if (split.shares != null)
-    return `${split.shares} share${split.shares === 1 ? "" : "s"}`;
-  return null;
-}
 
 export function ExpenseDetailsDialog({
   id,

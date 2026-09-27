@@ -5,7 +5,7 @@ import (
 	"runtime"
 )
 
-func ServerLog(err error, message string) {
+func ServerErrLog(err error, message string) {
 	_, file, line, ok := runtime.Caller(2)
 	if !ok {
 		file = "???"
@@ -16,4 +16,13 @@ func ServerLog(err error, message string) {
 	} else {
 		log.Printf("[ERROR] %s:%d | msg=%s", file, line, message)
 	}
+}
+
+func ServerInfoLog(message string) {
+	_, file, line, ok := runtime.Caller(2)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+	log.Printf("[INFO] %s:%d | msg=%s", file, line, message)
 }

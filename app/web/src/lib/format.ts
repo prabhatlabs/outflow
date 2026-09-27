@@ -1,3 +1,5 @@
+import type { ExpenseSplit, GroupMemberWithUser } from "./types";
+
 const MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 type DateInput = string | Date | null | undefined
@@ -88,4 +90,52 @@ export function formatAmount(amount: number, currency: string) {
     style: "currency",
     currency,
   }).format(amount)
+}
+
+export type NameLike = {
+  first_name: string
+  last_name: string | null
+  email?: string | null
+}
+
+export function memberName(
+  member: NameLike | undefined | null,
+  fallback = "",
+): string {
+  if (!member) return fallback
+  return (
+    [member.first_name, member.last_name].filter(Boolean).join(" ") ||
+    member.email ||
+    fallback
+  )
+}
+
+export function memberNameById(
+  members: GroupMemberWithUser[],
+  userId: string,
+  fallback?: string,
+): string {
+  const m = members.find((x) => x.user_id === userId)
+  return memberName(m, fallback ?? userId.slice(0, 8))
+}
+
+export function getInitials(
+  first_name: string,
+  last_name: string | null,
+  fallback = "U",
+): string {
+  const first = first_name?.[0] ?? ""
+  const last = last_name?.[0] ?? ""
+  return (first + last).toUpperCase() || fallback
+}
+
+export function todayISO(d = new Date()): string {
+  return d.toISOString().slice(0, 10)
+}
+
+export function splitExtra(split: ExpenseSplit): string | null {
+  if (split.percentage != null) return `${split.percentage}%`
+  if (split.shares != null)
+    return `${split.shares} share${split.shares === 1 ? "" : "s"}`
+  return null
 }

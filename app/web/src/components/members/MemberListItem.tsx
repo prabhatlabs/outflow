@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { getInitials, memberName } from "@/lib/format"
 import type { GroupMemberWithUser } from "@/lib/types"
 import { Shield, Trash2, User } from "lucide-react"
 
@@ -20,8 +21,8 @@ export function MemberListItem({
   onChangeRole,
   onRemove,
 }: Props) {
-  const name = [member.first_name, member.last_name].filter(Boolean).join(" ")
-  const initial = (member.first_name || member.email).slice(0, 1).toUpperCase()
+  const name = memberName(member)
+  const initial = getInitials(member.first_name, member.last_name, member.email.slice(0, 1).toUpperCase()).slice(0, 1)
   const manageable = canManage && member.role !== "owner"
 
   return (

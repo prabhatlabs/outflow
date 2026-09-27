@@ -24,6 +24,8 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getInitials } from "@/lib/format";
+import { logoutAndNavigate } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth";
 import { useDialogStore } from "@/store/dialog";
 import { useGroupsStore } from "@/store/groups";
@@ -163,12 +165,6 @@ function SidebarNavCollapsibleItem({
   );
 }
 
-function getInitials(first_name: string, last_name: string | null) {
-  const first = first_name?.[0] ?? "";
-  const last = last_name?.[0] ?? "";
-  return (first + last).toUpperCase() || "U";
-}
-
 function GroupSwitcher() {
   const { currentGroup, setCurrentGroupById, groups, status } =
     useGroupsStore();
@@ -230,15 +226,12 @@ function GroupSwitcher() {
 }
 
 function UserMenu() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
 
   if (!user) return null;
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
+  const handleLogout = () => logoutAndNavigate(navigate);
 
   return (
     <DropdownMenu>

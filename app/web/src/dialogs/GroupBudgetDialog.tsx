@@ -16,12 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { BUDGET_PERIODS, validateBudgetInput } from "@/lib/budget"
 import type { BudgetPeriod, CreateBudgetInput } from "@/lib/types"
 import { useGroupBudgetsStore } from "@/store/budgets"
 import { useDialogStore } from "@/store/dialog"
 import type { DialogPayloadMap } from "./types"
-
-const PERIODS: BudgetPeriod[] = ["weekly", "monthly", "yearly", "custom"]
 
 export function GroupBudgetDialog({
   id,
@@ -60,15 +59,12 @@ export function GroupBudgetDialog({
       setFormError("Missing group")
       return
     }
+    const err = validateBudgetInput({ amount, period, endDate })
+    if (err) {
+      setFormError(err)
+      return
+    }
     const parsedAmount = Number(amount)
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setFormError("Amount must be a positive number")
-      return
-    }
-    if (period === "custom" && !endDate) {
-      setFormError("Custom period requires an end date")
-      return
-    }
 
     const body: CreateBudgetInput = {
       amount_limit: parsedAmount,
@@ -126,7 +122,7 @@ export function GroupBudgetDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PERIODS.map((p) => (
+                {BUDGET_PERIODS.map((p) => (
                   <SelectItem key={p} value={p}>
                     {p}
                   </SelectItem>

@@ -16,12 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { BUDGET_PERIODS, validateBudgetInput } from "@/lib/budget"
 import type { BudgetPeriod } from "@/lib/types"
 import { useDialogStore } from "@/store/dialog"
 import { usePersonalBudgetsStore } from "@/store/budgets"
 import type { DialogPayloadMap } from "./types"
-
-const PERIODS: BudgetPeriod[] = ["weekly", "monthly", "yearly", "custom"]
 
 export function BudgetDialog({
   id,
@@ -52,11 +51,12 @@ export function BudgetDialog({
   const [formError, setFormError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
-    const parsedAmount = Number(amount)
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setFormError("Amount must be a positive number")
+    const err = validateBudgetInput({ amount, period, endDate })
+    if (err) {
+      setFormError(err)
       return
     }
+    const parsedAmount = Number(amount)
 
     const payloadBody: Record<string, unknown> = {
       amount_limit: parsedAmount,
@@ -65,10 +65,6 @@ export function BudgetDialog({
     }
     if (startDate) payloadBody.start_date = startDate
     if (endDate) payloadBody.end_date = endDate
-    if (period === "custom" && !endDate) {
-      setFormError("Custom period requires an end date")
-      return
-    }
 
     setPending(true)
     setFormError(null)
@@ -118,7 +114,7 @@ export function BudgetDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PERIODS.map((p) => (
+                {BUDGET_PERIODS.map((p) => (
                   <SelectItem key={p} value={p}>
                     {p}
                   </SelectItem>

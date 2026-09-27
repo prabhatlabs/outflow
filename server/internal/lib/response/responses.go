@@ -60,6 +60,6 @@ func Conflict(w http.ResponseWriter, message string) {
 }
 
 func InternalServerError(w http.ResponseWriter, err error, message string) {
-	log.ServerLog(err, message)
+	log.ServerErrLog(err, message)
 	Error(w, http.StatusInternalServerError, message)
 }

@@ -85,7 +85,7 @@ export function ExpensesPage() {
 
   const paidByName = (expense: Expense) => {
     const m = members.find((m) => m.user_id === expense.paid_by);
-    return m ? memberName(m.first_name, m.last_name, m.email) : "Unknown";
+    return memberName(m, "Unknown");
   };
 
   const categoryOf = (expense: Expense) =>
@@ -176,7 +176,7 @@ export function ExpensesPage() {
               <SelectItem value={"all"}>All</SelectItem>
               {members.map((m) => (
                 <SelectItem key={m.user_id} value={m.user_id}>
-                  {memberName(m.first_name, m.last_name, m.email)}
+                  {memberName(m)}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -10,25 +10,18 @@ import {
 } from "@/components/ui/card";
 import { ModeToggle } from "@/components/ui/theme-toggle";
 import { ViewModeToggle } from "@/components/ui/view-mode-toggle";
+import { getInitials } from "@/lib/format";
+import { logoutAndNavigate } from "@/lib/auth";
 import { useAuthStore } from "@/store/auth";
 import { useDialogStore } from "@/store/dialog";
 import { LogOut, Pencil } from "lucide-react";
 import { useNavigate } from "react-router";
 
-function getInitials(first_name: string, last_name: string | null) {
-  const first = first_name?.[0] ?? "";
-  const last = last_name?.[0] ?? "";
-  return (first + last).toUpperCase() || "U";
-}
-
 export default function Settings() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
+  const handleLogout = () => logoutAndNavigate(navigate);
 
   if (!user) return null;
 

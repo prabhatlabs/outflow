@@ -31,15 +31,11 @@ import { useExpensesStore } from "@/store/expenses";
 import { useMembersStore } from "@/store/members";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DialogPayloadMap } from "./types";
-import { memberName } from "@/lib/format";
+import { memberName, todayISO } from "@/lib/format";
 
 const SPLIT_TYPES: SplitType[] = ["equal", "percentage", "exact", "shares"];
 
 const DEFAULT_PAYER_VALUE = "__default__";
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export function ExpenseDialog({
   id,
@@ -91,7 +87,7 @@ export function ExpenseDialog({
   const [note, setNote] = useState(existing?.note ?? "");
   const [categoryId, setCategoryId] = useState(existing?.category_id ?? "");
   const [expenseDate, setExpenseDate] = useState(
-    existing?.expense_date?.slice(0, 10) ?? today(),
+    existing?.expense_date?.slice(0, 10) ?? todayISO(),
   );
   const [paidBy, setPaidBy] = useState(existing?.paid_by ?? "");
   const [splitType, setSplitType] = useState<SplitType>(
@@ -314,7 +310,7 @@ export function ExpenseDialog({
                 </SelectItem>
                 {activeMembers.map((m) => (
                   <SelectItem key={m.user_id} value={m.user_id}>
-                    {memberName(m.first_name, m.last_name, m.email)}
+                    {memberName(m)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -395,7 +391,7 @@ export function ExpenseDialog({
                   className="w-28"
                 />
               )}
-              <span className="truncate text-sm">{memberName(m.first_name, m.last_name, m.email)}</span>
+              <span className="truncate text-sm">{memberName(m)}</span>
             </div>
           ))}
           {activeMembers.length === 0 && (

@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { formatDate, formatAmount } from "@/lib/format"
+import { formatDate, formatAmount, memberNameById } from "@/lib/format"
 import type { GroupMemberWithUser, Settlement } from "@/lib/types"
 import { ArrowRight, Trash2 } from "lucide-react"
 
@@ -12,12 +12,6 @@ type Props = {
   members: GroupMemberWithUser[]
   currency: string
   onDelete: (settlement: Settlement) => void
-}
-
-function memberName(members: GroupMemberWithUser[], userId: string) {
-  const member = members.find((m) => m.user_id === userId)
-  if (member) return [member.first_name, member.last_name].filter(Boolean).join(" ")
-  return userId.slice(0, 8)
 }
 
 export function SettlementListItem({
@@ -31,9 +25,9 @@ export function SettlementListItem({
       <CardContent className="flex items-start justify-between gap-3 px-3">
         <div className="min-w-0">
           <p className="flex items-center gap-1 truncate font-medium">
-            {memberName(members, settlement.from_user_id)}
+            {memberNameById(members, settlement.from_user_id)}
             <ArrowRight className="size-3 shrink-0" />
-            {memberName(members, settlement.to_user_id)}
+            {memberNameById(members, settlement.to_user_id)}
           </p>
           <p className="truncate text-sm text-muted-foreground">
             {formatAmount(settlement.amount, currency)} ·{" "}

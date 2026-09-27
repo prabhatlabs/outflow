@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatDate, formatAmount } from "@/lib/format"
+import { formatDate, formatAmount, memberNameById } from "@/lib/format"
 import type { GroupMemberWithUser } from "@/lib/types"
 import { Trash2 } from "lucide-react"
 import type { Settlement } from "./SettlementListItem"
@@ -18,12 +18,6 @@ type Props = {
   members: GroupMemberWithUser[]
   currency: string
   onDelete: (settlement: Settlement) => void
-}
-
-function memberName(members: GroupMemberWithUser[], userId: string) {
-  const member = members.find((m) => m.user_id === userId)
-  if (member) return [member.first_name, member.last_name].filter(Boolean).join(" ")
-  return userId.slice(0, 8)
 }
 
 export function SettlementTable({
@@ -48,10 +42,10 @@ export function SettlementTable({
         {settlements.map((settlement) => (
           <TableRow key={settlement.id}>
             <TableCell className="truncate font-medium min-w-0 max-w-40">
-              {memberName(members, settlement.from_user_id)}
+              {memberNameById(members, settlement.from_user_id)}
             </TableCell>
             <TableCell className="truncate min-w-0 max-w-40">
-              {memberName(members, settlement.to_user_id)}
+              {memberNameById(members, settlement.to_user_id)}
             </TableCell>
             <TableCell>
               {formatAmount(settlement.amount, currency)}

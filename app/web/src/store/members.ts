@@ -90,7 +90,7 @@ export const useMembersStore = create<MembersState>((set, get) => ({
 
   getMemberNameByUserId: (memberId: string) => {
     const m = get().items.find((m) => m.user_id === memberId)
-    return m ? memberName(m.first_name, m.last_name, m.email) : ""
+    return memberName(m)
   },
 
   remove: async (groupId, memberId) => {

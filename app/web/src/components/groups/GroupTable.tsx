@@ -8,10 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useGroupActions } from "@/hooks/useGroupActions";
 import { formatDateTime } from "@/lib/format";
 import type { Group } from "@/lib/types";
-import { useDialogStore } from "@/store/dialog";
-import { useGroupsStore } from "@/store/groups";
 import { Archive, ArchiveRestore, Pencil, SquareArrowOutUpRight } from "lucide-react";
 import { Link } from "react-router";
 
@@ -20,34 +19,7 @@ type Props = {
 };
 
 export function GroupTable({ groups }: Props) {
-  const archiveGroup = useGroupsStore((s) => s.archiveGroup);
-  const unarchiveGroup = useGroupsStore((s) => s.unarchiveGroup);
-
-  const handleEdit = (group: Group) => {
-    useDialogStore.getState().open("createGroup", { groupId: group.id });
-  };
-
-  const handleArchive = (group: Group) => {
-    useDialogStore.getState().open("confirm", {
-      title: "Archive group?",
-      description: `Archive "${group.name}"? You can restore it later from archived groups.`,
-      confirmLabel: "Archive",
-      onConfirm: () => {
-        archiveGroup(group.id);
-      },
-    });
-  };
-
-  const handleUnarchive = (group: Group) => {
-    useDialogStore.getState().open("confirm", {
-      title: "Unarchive group?",
-      description: `Unarchive "${group.name}"?`,
-      confirmLabel: "Unarchive",
-      onConfirm: () => {
-        unarchiveGroup(group.id);
-      },
-    });
-  };
+  const { handleEdit, handleArchive, handleUnarchive } = useGroupActions();
 
   return (
     <Table>

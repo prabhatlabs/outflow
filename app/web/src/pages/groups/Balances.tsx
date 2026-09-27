@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { formatAmount } from "@/lib/format"
+import { formatAmount, memberName } from "@/lib/format"
 import { useBalancesStore } from "@/store/balances"
 import { useGroupsStore } from "@/store/groups"
 import { cn } from "cn"
@@ -86,7 +86,7 @@ export function BalancesPage() {
             {items.map((row) => (
               <TableRow key={row.user_id}>
                 <TableCell className="truncate font-medium min-w-0 max-w-55">
-                  {[row.first_name, row.last_name].filter(Boolean).join(" ")}
+                  {memberName(row)}
                 </TableCell>
                 <TableCell>{formatAmount(row.paid, currency)}</TableCell>
                 <TableCell>{formatAmount(row.owed, currency)}</TableCell>

@@ -17,11 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import type {
-  CreateSettlementInput,
-  GroupMemberWithUser,
-  PaymentMethod,
-} from "@/lib/types"
+import { memberName, todayISO } from "@/lib/format"
+import type { CreateSettlementInput, PaymentMethod } from "@/lib/types"
 import { useAuthStore } from "@/store/auth"
 import { useBalancesStore } from "@/store/balances"
 import { useDialogStore } from "@/store/dialog"
@@ -39,14 +36,6 @@ const PAYMENT_METHODS: PaymentMethod[] = [
 ]
 
 const NO_MEMBER_VALUE = "__none__"
-
-function today() {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function memberName(m: GroupMemberWithUser) {
-  return [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email
-}
 
 export function SettlementDialog({
   id,
@@ -80,7 +69,7 @@ export function SettlementDialog({
     payload?.amount !== undefined ? String(payload.amount) : "",
   )
   const [method, setMethod] = useState<PaymentMethod>("cash")
-  const [date, setDate] = useState(today())
+  const [date, setDate] = useState(todayISO())
   const [note, setNote] = useState("")
   const [pending, setPending] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)

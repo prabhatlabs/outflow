@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import PageHeader from "@/components/PageHeader"
-import { formatAmount } from "@/lib/format"
+import { formatAmount, memberName } from "@/lib/format"
 import type { BalanceRow } from "@/lib/types"
 import { useBalancesStore } from "@/store/balances"
 import { useDialogStore } from "@/store/dialog"
@@ -44,10 +44,6 @@ function suggestSettlements(rows: BalanceRow[]): Suggestion[] {
     if (c.due <= 0.005) j++
   }
   return out
-}
-
-function memberName(row: BalanceRow) {
-  return [row.first_name, row.last_name].filter(Boolean).join(" ")
 }
 
 export function SettleUpPage() {
