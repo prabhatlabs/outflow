@@ -13,6 +13,7 @@ import (
 	"github.com/prabhatlabs/outflow/internal/lib/email"
 	"github.com/prabhatlabs/outflow/internal/services/auth"
 	"github.com/prabhatlabs/outflow/internal/services/budgets"
+	"github.com/prabhatlabs/outflow/internal/services/dashboard"
 	"github.com/prabhatlabs/outflow/internal/services/groups"
 	"github.com/prabhatlabs/outflow/internal/services/invitations"
 )
@@ -47,6 +48,7 @@ func main() {
 
 		r.Mount("/invitations", invitations.UserInvitationsRouter(database))
 		r.Mount("/personal-budgets", budgets.PersonalBudgetsRouter(database))
+		r.Mount("/dashboard", dashboard.DashboardRouter(database))
 		r.Mount("/groups", groups.GroupsRouter(database))
 	})
 

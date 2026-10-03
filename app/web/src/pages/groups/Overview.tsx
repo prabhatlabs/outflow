@@ -313,65 +313,69 @@ export function OverviewPage() {
         </div>
       </div>
 
-      {/* Overall balances preview */}
-      {hasData && overview.balances.length > 0 && (
+      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Balances · overall</CardTitle>
-            <CardDescription>Net position across all time</CardDescription>
+            <CardTitle>Recent expenses · {period === "today" ? "today" : period === "7d" ? "last 7 days" : "last 30 days"}</CardTitle>
+            <CardDescription>Up to 10 most recent in this period</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-2">
-            {overview.balances.slice(0, 6).map((b) => {
-              const name = memberName({ first_name: b.first_name, last_name: b.last_name })
-              const netNum = b.net ?? 0
-              return (
-                <div key={String(b.user_id)} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate font-medium">{name}</span>
-                  <span className={netNum >= 0 ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-destructive font-medium"}>
-                    {formatAmount(netNum, currency)}
-                  </span>
-                </div>
-              )
-            })}
-            {overview.balances.length > 6 && (
-              <Link to={`/${groupId}/balances`} className={buttonVariants({ variant: "link", className: "pl-0 pr-0" })}>
-                View all balances
-              </Link>
+          <CardContent className="grid gap-3">
+            {isLoading && <Skeleton className="h-16 w-full" />}
+            {!isLoading && hasData && overview.recent_expenses.length === 0 && (
+              <BannerCard
+                title="No expenses in this period"
+                description="Add an expense to start tracking shared spending."
+                action={
+                  <Link to={`/${groupId}/expenses`} className={buttonVariants({ size: "sm" })}>
+                    Go to expenses
+                  </Link>
+                }
+              />
             )}
+            {hasData &&
+              overview.recent_expenses.map((expense) => (
+                <div key={expense.id} className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{expense.description || "Expense"}</p>
+                    <p className="truncate text-xs text-muted-foreground">{formatDate(expense.expense_date)}</p>
+                  </div>
+                  <p className="shrink-0 font-medium">{formatAmount(expense.amount, currency)}</p>
+                </div>
+              ))}
           </CardContent>
         </Card>
-      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent expenses · {period === "today" ? "today" : period === "7d" ? "last 7 days" : "last 30 days"}</CardTitle>
-          <CardDescription>Up to 10 most recent in this period</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          {isLoading && <Skeleton className="h-16 w-full" />}
-          {!isLoading && hasData && overview.recent_expenses.length === 0 && (
-            <BannerCard
-              title="No expenses in this period"
-              description="Add an expense to start tracking shared spending."
-              action={
-                <Link to={`/${groupId}/expenses`} className={buttonVariants({ size: "sm" })}>
-                  Go to expenses
-                </Link>
-              }
-            />
+        <div className="grid gap-4 content-start">
+          {hasData && overview.balances.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Balances · overall</CardTitle>
+                <CardDescription>Net per member (paid − owed − settled)</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-2">
+                {overview.balances.slice(0, 6).map((b) => {
+                  const name = memberName({ first_name: b.first_name, last_name: b.last_name })
+                  const netNum = b.net ?? 0
+                  return (
+                    <div key={String(b.user_id)} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="truncate font-medium">{name}</span>
+                      <span className={netNum >= 0 ? "text-emerald-600 dark:text-emerald-400 font-medium shrink-0" : "text-destructive font-medium shrink-0"}>
+                        {formatAmount(netNum, currency)}
+                      </span>
+                    </div>
+                  )
+                })}
+                {overview.balances.length > 6 && (
+                  <Link to={`/${groupId}/balances`} className={buttonVariants({ variant: "link", className: "pl-0 pr-0" })}>
+                    View all balances
+                  </Link>
+                )}
+                <p className="text-xs text-muted-foreground">Paid / owed / settled are overall, not just this period.</p>
+              </CardContent>
+            </Card>
           )}
-          {hasData &&
-            overview.recent_expenses.map((expense) => (
-              <div key={expense.id} className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{expense.description || "Expense"}</p>
-                  <p className="truncate text-sm text-muted-foreground">{formatDate(expense.expense_date)}</p>
-                </div>
-                <p className="shrink-0 font-medium">{formatAmount(expense.amount, currency)}</p>
-              </div>
-            ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

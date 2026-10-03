@@ -265,6 +265,64 @@ export type GroupOverview = {
   balances: BalanceRow[]
 }
 
+export type DashboardStats = {
+  expense_count: number
+  total_paid: number
+  total_owed: number
+  net: number
+  avg_per_day: number
+  avg_per_expense: number
+  settlement_count: number
+  settlement_amount: number
+  active_group_count: number
+}
+
+export type DashboardGroupBreakdown = {
+  group_id: string
+  group_name: string
+  currency: string
+  count: number
+  total: number
+  percentage: number
+}
+
+export type DashboardCategoryBreakdown = OverviewCategoryBreakdown
+
+export type DashboardCurrencyBreakdown = {
+  currency: string
+  count: number
+  total: number
+  percentage: number
+}
+
+export type DashboardBalanceSummary = {
+  group_id: string
+  group_name: string
+  paid: number
+  owed: number
+  settled: number
+  net: number
+}
+
+export type DashboardExpenseWithGroup = Expense & { group_name: string }
+
+export type DashboardOverview = {
+  period: OverviewPeriod
+  from_date: string
+  to_date: string
+  timezone: string
+  currency: string
+  stats: DashboardStats
+  by_group: DashboardGroupBreakdown[]
+  by_category: DashboardCategoryBreakdown[]
+  by_currency: DashboardCurrencyBreakdown[]
+  daily: OverviewDailyPoint[]
+  recent_expenses: DashboardExpenseWithGroup[]
+  balances_summary: DashboardBalanceSummary[]
+  pending_invitations: { count: number; preview: Invitation[] }
+  personal_budgets: { count: number; preview: PersonalBudget[] }
+}
+
 export type GroupMemberStatus = "invited" | "active" | "left" | "removed"
 
 export type GroupMember = {

@@ -52,7 +52,7 @@ export function SettingsPage() {
 
   // Snapshot initial values when the group loads (RequireGroup guarantees it).
   const group = currentGroup;
-  const owner = isOwner(group);
+  void isOwner(group);
 
   const handleSave = async () => {
     if (!groupId || !group) return;
