@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/mail"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -21,12 +22,37 @@ import (
 
 func (s *Service) oauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	oauthState := generateState()
+	http.SetCookie(w, &http.Cookie{
+		Name:     lib.OAuthStateCookieName,
+		Value:    oauthState,
+		Path:     "/auth/callback",
+		HttpOnly: true,
+		Secure:   lib.IsProd(),
+		SameSite: http.SameSiteLaxMode,
+		Expires:  time.Now().Add(lib.OAuthStateTTL),
+		MaxAge:   int(lib.OAuthStateTTL.Seconds()),
+	})
 	u := newOauthConfig().AuthCodeURL(oauthState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 	http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 }
 
 func (s *Service) oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	state := r.URL.Query().Get("state")
+	c, cookieErr := r.Cookie(lib.OAuthStateCookieName)
+	if cookieErr == nil {
+		if state == "" || c.Value != state {
+			http.Error(w, "Invalid OAuth state", http.StatusForbidden)
+			return
+		}
+		http.SetCookie(w, &http.Cookie{Name: lib.OAuthStateCookieName, Path: "/auth/callback", MaxAge: -1, Expires: time.Now().Add(-time.Hour)})
+	} else {
+		if state == "" {
+			http.Error(w, "Invalid OAuth state", http.StatusForbidden)
+			return
+		}
+	}
 
 	code := r.URL.Query().Get("code")
 	if code == "" {

@@ -24,14 +24,17 @@ type EnvsType struct {
 var Envs *EnvsType
 
 func LoadEnv() error {
+	viper.AddConfigPath(".")
 	viper.AddConfigPath("../.")
+	viper.AddConfigPath("../..")
 	viper.SetConfigName("prod")
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()
-	err := viper.ReadInConfig()
-	if err != nil {
-		return err
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return err
+		}
 	}
 
 	requiredKeys := []string{

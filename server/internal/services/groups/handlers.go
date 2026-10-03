@@ -50,6 +50,9 @@ func parseGroupType(s string) (db.GroupType, bool) {
 
 func (s *Service) allHandler(w http.ResponseWriter, r *http.Request) {
 	userID := lib.UserIDFromContextWithUnauthorizedErr(r.Context(), w)
+	if userID == uuid.Nil {
+		return
+	}
 	limit, offset := lib.ParsePagination(r)
 	groups, err := s.db.Q.ListGroupsByUserID(r.Context(), db.ListGroupsByUserIDParams{
 		UserID:     lib.PGUUID(userID),
@@ -57,7 +60,7 @@ func (s *Service) allHandler(w http.ResponseWriter, r *http.Request) {
 		PageOffset: offset,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response.InternalServerError(w, err, "Failed to fetch groups")
 		return
 	}
 	if groups == nil {

@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { formatAmount, formatDate, formatDayMonth, memberName } from "@/lib/format"
 import type { OverviewPeriod } from "@/lib/types"
 import { useGroupsStore } from "@/store/groups"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { Link, useParams } from "react-router"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
@@ -22,16 +22,18 @@ function pct(n: number) {
   return `${n.toFixed(1)}%`
 }
 
+const chartConfig = {
+  total: { label: "Spent", color: "var(--primary)" },
+} as const
+
 export function OverviewPage() {
   const { groupId } = useParams()
   const currentGroup = useGroupsStore((s) => s.currentGroup)
   const overview = useGroupsStore((s) => s.overview)
   const overviewStatus = useGroupsStore((s) => s.overviewStatus)
   const overviewError = useGroupsStore((s) => s.overviewError)
-  const storedPeriod = useGroupsStore((s) => s.overviewPeriod)
+  const period = useGroupsStore((s) => s.overviewPeriod)
   const fetchOverview = useGroupsStore((s) => s.fetchOverview)
-
-  const [period, setPeriod] = useState<OverviewPeriod>(storedPeriod)
 
   useEffect(() => {
     if (!groupId) return
@@ -43,19 +45,18 @@ export function OverviewPage() {
   const isLoading = overviewStatus === "loading" || overviewStatus === "idle"
   const hasData = overview != null && overviewStatus === "success"
 
-  const netTotal = hasData ? overview.balances.reduce((sum, r) => sum + (r.net ?? 0), 0) : 0
+  const netTotal = hasData ? overview.balances.reduce((sum, r) => sum + (Number(r.net) || 0), 0) : 0
 
-  const chartData =
-    overview?.daily.map((d) => ({
-      date: d.date,
-      label: formatDayMonth(d.date),
-      total: d.total,
-      count: d.count,
-    })) ?? []
-
-  const chartConfig = {
-    total: { label: "Spent", color: "var(--primary)" },
-  } as const
+  const chartData = useMemo(
+    () =>
+      (overview?.daily ?? []).map((d) => ({
+        date: d.date,
+        label: formatDayMonth(d.date),
+        total: d.total,
+        count: d.count,
+      })),
+    [overview?.daily],
+  )
 
   return (
     <div className="space-y-6">
@@ -71,7 +72,9 @@ export function OverviewPage() {
               size="sm"
               variant={period === opt.value ? "default" : "ghost"}
               className="rounded-full h-7 px-3 text-xs"
-              onClick={() => setPeriod(opt.value)}
+              aria-pressed={period === opt.value}
+              disabled={isLoading}
+              onClick={() => fetchOverview(groupId!, opt.value)}
             >
               {opt.label}
             </Button>
@@ -90,7 +93,7 @@ export function OverviewPage() {
             <CardTitle className="text-sm text-muted-foreground">Total spent</CardTitle>
             {hasData && (
               <CardDescription>
-                {overview.from_date} → {overview.to_date} · {overview.timezone}
+                {formatDate(overview.from_date)} → {formatDate(overview.to_date)} · {overview.timezone}
               </CardDescription>
             )}
           </CardHeader>
@@ -180,7 +183,7 @@ export function OverviewPage() {
             {isLoading
               ? "Loading…"
               : hasData
-                ? `${overview.period === "today" ? "Today" : overview.period === "7d" ? "Last 7 days" : "Last 30 days"} · ${overview.from_date} → ${overview.to_date}`
+                ? `${overview.period === "today" ? "Today" : overview.period === "7d" ? "Last 7 days" : "Last 30 days"} · ${formatDate(overview.from_date)} → ${formatDate(overview.to_date)}`
                 : "Daily totals"}
           </CardDescription>
         </CardHeader>

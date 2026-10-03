@@ -19,7 +19,6 @@ type SuccessResponse struct {
 func SendJsonResponse(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(statusCode)
 
 	res := data
 	if res == nil {
@@ -30,10 +29,11 @@ func SendJsonResponse(w http.ResponseWriter, statusCode int, data interface{}) {
 
 	jsonData, err := json.Marshal(res)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Printf("[ERROR] json marshal failed: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
+	w.WriteHeader(statusCode)
 	w.Write(jsonData)
 }

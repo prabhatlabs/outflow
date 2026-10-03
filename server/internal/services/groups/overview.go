@@ -2,6 +2,7 @@ package groups
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/prabhatlabs/outflow/internal/db"
 	"github.com/prabhatlabs/outflow/internal/lib"
 	"github.com/prabhatlabs/outflow/internal/lib/response"
+	"golang.org/x/sync/errgroup"
 )
 
 type overviewPeriod string
@@ -136,6 +138,8 @@ func (s *Service) overviewHandler(w http.ResponseWriter, r *http.Request) {
 		if l, err := time.LoadLocation(u.Timezone); err == nil {
 			loc = l
 			tzName = u.Timezone
+		} else {
+			log.Printf("overview: invalid timezone %q for user %s: %v", u.Timezone, userID, err)
 		}
 	}
 
@@ -156,80 +160,72 @@ func (s *Service) overviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Period-filtered aggregates. Each query hits an index on (group_id, expense_date) etc.
-	statsRow, err := s.db.Q.GetOverviewStats(r.Context(), db.GetOverviewStatsParams{
-		GroupID:     groupPgID,
-		ExpenseDate: fromDate, ExpenseDate_2: toDate,
-	})
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to fetch overview stats")
-		return
-	}
+	// Fetch period aggregates concurrently.
+	var (
+		statsRow      db.GetOverviewStatsRow
+		settlementRow db.GetOverviewSettlementStatsRow
+		memberCount   int64
+		catRows       []db.GetOverviewByCategoryRow
+		paidRows      []db.GetOverviewByMemberPaidRow
+		owedRows      []db.GetOverviewByMemberOwedRow
+		dailyRows     []db.GetOverviewDailyRow
+		recentRows    []db.Expense
+		balanceRows   []db.ListGroupBalancesRow
+	)
+	g, gctx := errgroup.WithContext(r.Context())
 
-	settlementRow, err := s.db.Q.GetOverviewSettlementStats(r.Context(), db.GetOverviewSettlementStatsParams{
-		GroupID: groupPgID, SettlementDate: fromDate, SettlementDate_2: toDate,
+	g.Go(func() error {
+		var err error
+		statsRow, err = s.db.Q.GetOverviewStats(gctx, db.GetOverviewStatsParams{GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate})
+		return err
 	})
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to fetch settlement stats")
-		return
-	}
-
-	memberCount, err := s.db.Q.GetOverviewMemberCount(r.Context(), groupPgID)
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to fetch member count")
-		return
-	}
-
-	catRows, err := s.db.Q.GetOverviewByCategory(r.Context(), db.GetOverviewByCategoryParams{
-		GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate,
+	g.Go(func() error {
+		var err error
+		settlementRow, err = s.db.Q.GetOverviewSettlementStats(gctx, db.GetOverviewSettlementStatsParams{GroupID: groupPgID, SettlementDate: fromDate, SettlementDate_2: toDate})
+		return err
 	})
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to fetch category breakdown")
-		return
-	}
-
-	paidRows, err := s.db.Q.GetOverviewByMemberPaid(r.Context(), db.GetOverviewByMemberPaidParams{
-		GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate,
+	g.Go(func() error {
+		var err error
+		memberCount, err = s.db.Q.GetOverviewMemberCount(gctx, groupPgID)
+		return err
 	})
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to fetch member paid breakdown")
-		return
-	}
-
-	owedRows, err := s.db.Q.GetOverviewByMemberOwed(r.Context(), db.GetOverviewByMemberOwedParams{
-		GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate,
+	g.Go(func() error {
+		var err error
+		catRows, err = s.db.Q.GetOverviewByCategory(gctx, db.GetOverviewByCategoryParams{GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate})
+		return err
 	})
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to fetch member owed breakdown")
-		return
-	}
-
-	dailyRows, err := s.db.Q.GetOverviewDaily(r.Context(), db.GetOverviewDailyParams{
-		GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate,
+	g.Go(func() error {
+		var err error
+		paidRows, err = s.db.Q.GetOverviewByMemberPaid(gctx, db.GetOverviewByMemberPaidParams{GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate})
+		return err
 	})
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to fetch daily trend")
-		return
-	}
-
-	recentRows, err := s.db.Q.GetOverviewRecent(r.Context(), db.GetOverviewRecentParams{
-		GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate,
+	g.Go(func() error {
+		var err error
+		owedRows, err = s.db.Q.GetOverviewByMemberOwed(gctx, db.GetOverviewByMemberOwedParams{GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate})
+		return err
 	})
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to fetch recent expenses")
+	g.Go(func() error {
+		var err error
+		dailyRows, err = s.db.Q.GetOverviewDaily(gctx, db.GetOverviewDailyParams{GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate})
+		return err
+	})
+	g.Go(func() error {
+		var err error
+		recentRows, err = s.db.Q.GetOverviewRecent(gctx, db.GetOverviewRecentParams{GroupID: groupPgID, ExpenseDate: fromDate, ExpenseDate_2: toDate})
+		return err
+	})
+	g.Go(func() error {
+		var err error
+		balanceRows, err = s.db.Q.ListGroupBalances(gctx, db.ListGroupBalancesParams{GroupID: groupPgID, PageLimit: 100, PageOffset: 0})
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
+		response.InternalServerError(w, err, "Failed to fetch overview")
 		return
 	}
 	if recentRows == nil {
 		recentRows = []db.Expense{}
-	}
-
-	// Overall balances (not period-filtered) for net position.
-	balanceRows, err := s.db.Q.ListGroupBalances(r.Context(), db.ListGroupBalancesParams{
-		GroupID: groupPgID, PageLimit: 100, PageOffset: 0,
-	})
-	if err != nil {
-		response.InternalServerError(w, err, "Failed to compute balances")
-		return
 	}
 	balances := make([]balanceRow, 0, len(balanceRows))
 	for _, row := range balanceRows {

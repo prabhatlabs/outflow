@@ -141,6 +141,9 @@ func validateBudgetPatch(in budgetInput) (budgetPatch, string) {
 	if !endDate.IsZero() && !startDate.IsZero() && endDate.Before(startDate) {
 		return p, "end_date cannot be before start_date"
 	}
+	// Single-date chronological guard when only end_date is patched: defer to
+	// checkCustomPeriod which merges with existing start/end for custom periods.
+	// For non-custom, DB will reject but we surface a clean 400 via check.
 	return p, ""
 }
 
@@ -162,6 +165,29 @@ func checkCustomPeriod(period db.NullBudgetPeriod, newStart, newEnd pgtype.Date,
 		start = oldStart
 	}
 	if start.Valid && end.Time.Before(start.Time) {
+		return errors.New("end_date cannot be before start_date")
+	}
+	return nil
+}
+
+func mergedStart(newStart, oldStart pgtype.Date) pgtype.Date {
+	if newStart.Valid {
+		return newStart
+	}
+	return oldStart
+}
+
+func mergedEnd(newEnd, oldEnd pgtype.Date) pgtype.Date {
+	if newEnd.Valid {
+		return newEnd
+	}
+	return oldEnd
+}
+
+func checkEndAfterStart(newStart, newEnd, oldStart, oldEnd pgtype.Date) error {
+	s := mergedStart(newStart, oldStart)
+	e := mergedEnd(newEnd, oldEnd)
+	if s.Valid && e.Valid && e.Time.Before(s.Time) {
 		return errors.New("end_date cannot be before start_date")
 	}
 	return nil
@@ -285,6 +311,10 @@ func (s *Service) groupEditHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := checkCustomPeriod(patch.period, patch.start, patch.end, budget.StartDate, budget.EndDate); err != nil {
+		response.BadRequest(w, err.Error())
+		return
+	}
+	if err := checkEndAfterStart(patch.start, patch.end, budget.StartDate, budget.EndDate); err != nil {
 		response.BadRequest(w, err.Error())
 		return
 	}
@@ -437,6 +467,10 @@ func (s *Service) personalEditHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := checkCustomPeriod(patch.period, patch.start, patch.end, budget.StartDate, budget.EndDate); err != nil {
+		response.BadRequest(w, err.Error())
+		return
+	}
+	if err := checkEndAfterStart(patch.start, patch.end, budget.StartDate, budget.EndDate); err != nil {
 		response.BadRequest(w, err.Error())
 		return
 	}

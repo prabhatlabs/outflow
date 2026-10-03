@@ -84,12 +84,19 @@ export function formatTime(value: DateInput, fallback = "\u2014") {
   return format12(p.hh, p.mm)
 }
 
-/** ₹1,234.56 */
-export function formatAmount(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-  }).format(amount)
+/** ₹1,234.56 — falls back gracefully on invalid currency */
+export function formatAmount(amount: number | string, currency: string) {
+  const n = typeof amount === "string" ? Number(amount) : amount
+  const safe = Number.isFinite(n) ? n : 0
+  const cur = (currency || "INR").toUpperCase().trim() || "INR"
+  try {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: cur,
+    }).format(safe)
+  } catch {
+    return `${cur} ${safe.toFixed(2)}`
+  }
 }
 
 export type NameLike = {

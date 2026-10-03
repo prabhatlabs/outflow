@@ -237,6 +237,7 @@ func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
+	userID := lib.UserIDFromContextWithUnauthorizedErr(r.Context(), w)
 	groupID := lib.GroupIDFromContextWithNotFoundErr(r.Context(), w)
 	if groupID == uuid.Nil {
 		return
@@ -257,6 +258,16 @@ func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if settlement.GroupID != lib.PGUUID(groupID) {
 		response.NotFound(w, "Settlement not found")
+		return
+	}
+	member, ok := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	if !ok {
+		return
+	}
+	isParticipant := settlement.FromUserID == lib.PGUUID(userID) || settlement.ToUserID == lib.PGUUID(userID)
+	isManager := member.Role == db.GroupMemberRoleOwner || member.Role == db.GroupMemberRoleAdmin
+	if !isParticipant && !isManager {
+		response.Forbidden(w, "Only participants or group managers can delete this settlement")
 		return
 	}
 

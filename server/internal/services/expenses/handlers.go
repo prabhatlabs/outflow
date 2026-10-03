@@ -275,6 +275,13 @@ func (s *Service) normalizeExpenseInput(r *http.Request, groupID pgtype.UUID, us
 		if err != nil {
 			return "paid_by is invalid", out
 		}
+		member, err := s.db.Q.GetGroupMemberByUserAndGroup(r.Context(), db.GetGroupMemberByUserAndGroupParams{
+			UserID:  lib.PGUUID(parsed),
+			GroupID: groupID,
+		})
+		if err != nil || member.Status != db.GroupMemberStatusActive {
+			return "paid_by must be an active group member", out
+		}
 		paidBy = parsed
 	}
 
@@ -434,8 +441,18 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 		f, _ := existing.Amount.Float64Value()
 		amount = f.Float64
 	}
-	if in.Amount == 0 && len(in.Splits) == 0 && in.SplitType == "" && in.PaidBy == "" &&
-		in.CategoryID == "" && in.Description == "" && in.Note == "" && in.ExpenseDate == "" {
+	hasPatch := in.Amount != 0 || len(in.Splits) > 0 || in.SplitType != "" || in.PaidBy != "" ||
+		in.CategoryID != "" || in.ExpenseDate != ""
+	if in.Description != "" {
+		hasPatch = true
+	}
+	if in.Note != "" {
+		hasPatch = true
+	}
+	// Note: empty Description/Note means "not provided" in the current
+	// non-pointer input type (limitation). Clearing to empty should be done
+	// via an explicit sentinel in a future API revision.
+	if !hasPatch {
 		response.BadRequest(w, "No fields to update")
 		return
 	}
@@ -445,6 +462,10 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 		uid, err := uuid.Parse(in.PaidBy)
 		if err != nil {
 			response.BadRequest(w, "paid_by is invalid")
+			return
+		}
+		if m, err := s.db.Q.GetGroupMemberByUserAndGroup(r.Context(), db.GetGroupMemberByUserAndGroupParams{UserID: lib.PGUUID(uid), GroupID: lib.PGUUID(groupID)}); err != nil || m.Status != db.GroupMemberStatusActive {
+			response.BadRequest(w, "paid_by must be an active group member")
 			return
 		}
 		params.PaidBy = lib.PGUUID(uid)
@@ -628,7 +649,10 @@ func (s *Service) setArchived(w http.ResponseWriter, r *http.Request, archived b
 		response.NotFound(w, "Expense not found")
 		return
 	}
-	member := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	member, ok := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	if !ok {
+		return
+	}
 	if existing.CreatedBy != lib.PGUUID(userID) && member.Role == db.GroupMemberRoleMember {
 		response.Forbidden(w, "Only the creator, admins and owners can change archive state")
 		return
@@ -677,7 +701,10 @@ func (s *Service) deleteHandler(w http.ResponseWriter, r *http.Request) {
 		response.NotFound(w, "Expense not found")
 		return
 	}
-	member := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	member, ok := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	if !ok {
+		return
+	}
 	if existing.CreatedBy != lib.PGUUID(userID) && member.Role == db.GroupMemberRoleMember {
 		response.Forbidden(w, "Only the creator, admins and owners can delete this expense")
 		return

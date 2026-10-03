@@ -73,13 +73,13 @@ func GroupMemberFromContext(ctx context.Context) (db.GroupMember, bool) {
 	return member, ok
 }
 
-func GroupMemberFromContextWithForbiddenErr(ctx context.Context, w http.ResponseWriter) db.GroupMember {
+func GroupMemberFromContextWithForbiddenErr(ctx context.Context, w http.ResponseWriter) (db.GroupMember, bool) {
 	member, ok := GroupMemberFromContext(ctx)
 	if !ok {
 		response.Forbidden(w, "Access denied")
-		return db.GroupMember{}
+		return db.GroupMember{}, false
 	}
-	return member
+	return member, true
 }
 
 func parseGroupIDParam(r *http.Request) (pgtype.UUID, uuid.UUID, error) {

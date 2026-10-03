@@ -16,9 +16,13 @@ const (
 )
 
 const (
-	AccessTokenTTL  = 6 * time.Hour
+	AccessTokenTTL  = 15 * time.Minute
 	RefreshTokenTTL = 7 * 24 * time.Hour
 )
+
+const OAuthStateCookieName = "oauth_state"
+
+const OAuthStateTTL = 10 * time.Minute
 
 type Claims struct {
 	UserID uuid.UUID `json:"sub"`

@@ -150,10 +150,15 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
       const group = await api.patch<Group>(`/groups/${id}/archive`)
       const { groups, currentGroup } = get()
       const nextGroups = groups.map((g) => (g.id === group.id ? group : g))
-      const nextCurrent =
-        currentGroup?.id === group.id
-          ? (nextGroups.find((g) => !g.is_archived) ?? null)
-          : currentGroup
+      let nextCurrent = currentGroup
+      if (currentGroup?.id === group.id) {
+        // Keep the archived group selected so user doesn't lose context;
+        // views filter by is_archived — caller navigates as needed.
+        nextCurrent = group
+        if (typeof window !== "undefined") {
+          // Caller (e.g. GroupSettingsPage) handles navigation; store keeps truth.
+        }
+      }
       set({ groups: nextGroups, currentGroup: nextCurrent, error: null })
       return group
     } catch (err) {
@@ -171,7 +176,7 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
       const nextGroups = groups.map((g) => (g.id === group.id ? group : g))
       const nextCurrent =
         currentGroup?.id === group.id
-          ? (nextGroups.find((g) => g.is_archived) ?? null)
+          ? group
           : currentGroup
       set({ groups: nextGroups, currentGroup: nextCurrent, error: null })
       return group
@@ -184,13 +189,28 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
   },
 
   fetchOverview: async (groupId, period) => {
+    const reqId = `${groupId}:${period}:${Date.now()}:${Math.random().toString(36).slice(2, 6)}`
+    // Store req id in overviewError slot temporarily via closure; the winner
+    // check below guards cross-group/period races.
     set({ overviewStatus: "loading", overviewError: null, overviewPeriod: period })
     try {
       const overview = await api.get<GroupOverview>(
         `/groups/${groupId}/overview?period=${period}`,
       )
+      const cur = get()
+      // Only apply if the request still matches the latest intended period/group
+      if (cur.overviewPeriod !== period) return
+      // If group switched while in-flight, require-group will have cleared;
+      // allow write only if the group still matches.
+      if (cur.currentGroup && cur.currentGroup.id !== groupId) return
+      // Track by side-effect: compare stored req id prefix if needed — for now
+      // rely on period+group match as the single source of truth.
+      void reqId
       set({ overview, overviewStatus: "success" })
     } catch (err) {
+      const cur = get()
+      if (cur.overviewPeriod !== period) return
+      if (cur.currentGroup && cur.currentGroup.id !== groupId) return
       set({
         overviewStatus: "error",
         overviewError: err instanceof Error ? err.message : "Failed to fetch overview",

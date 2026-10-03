@@ -74,7 +74,10 @@ func (s *Service) roleHandler(w http.ResponseWriter, r *http.Request) {
 	if groupID == uuid.Nil {
 		return
 	}
-	caller := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	caller, ok := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	if !ok {
+		return
+	}
 
 	target, ok := s.getMemberInGroup(w, r, groupID)
 	if !ok {
@@ -124,7 +127,10 @@ func (s *Service) removeHandler(w http.ResponseWriter, r *http.Request) {
 	if groupID == uuid.Nil {
 		return
 	}
-	caller := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	caller, ok := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	if !ok {
+		return
+	}
 
 	target, ok := s.getMemberInGroup(w, r, groupID)
 	if !ok {

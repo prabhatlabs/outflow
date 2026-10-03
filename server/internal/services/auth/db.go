@@ -65,7 +65,7 @@ func (s *Service) createUserIfNotExists(ctx context.Context, in createUserIfNotE
 				FirstName:     in.FirstName,
 				LastName:      lib.OptionalText(in.LastName),
 				AvatarUrl:     lib.OptionalText(in.AvatarURL),
-				Timezone:      "IST",
+				Timezone:      "Asia/Kolkata",
 				LastLoginMode: provider,
 				LastLoginAt:   now,
 			}

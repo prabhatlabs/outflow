@@ -77,7 +77,10 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 	userID := lib.UserIDFromContextWithUnauthorizedErr(r.Context(), w)
 	groupID := lib.GroupIDFromContextWithNotFoundErr(r.Context(), w)
-	member := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	member, ok := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	if !ok {
+		return
+	}
 	if groupID == uuid.Nil {
 		return
 	}
@@ -163,7 +166,10 @@ func normalizeEmail(s string) string {
 func (s *Service) cancelHandler(w http.ResponseWriter, r *http.Request) {
 	userID := lib.UserIDFromContextWithUnauthorizedErr(r.Context(), w)
 	groupID := lib.GroupIDFromContextWithNotFoundErr(r.Context(), w)
-	member := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	member, ok := lib.GroupMemberFromContextWithForbiddenErr(r.Context(), w)
+	if !ok {
+		return
+	}
 	if groupID == uuid.Nil {
 		return
 	}
