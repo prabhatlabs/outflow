@@ -2,7 +2,8 @@ import { BannerCard } from "@/components/BannerCard"
 import PageHeader from "@/components/PageHeader"
 import { buttonVariants } from "@/components/ui/button"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatAmount, formatDate, formatDayMonth, memberName } from "@/lib/format"
@@ -217,40 +218,8 @@ export function OverviewPage() {
         </CardContent>
       </Card>
 
-      {/* Distributions */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>By category</CardTitle>
-            <CardDescription>Amount distribution in this period</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {isLoading ? (
-              <Skeleton className="h-16 w-full" />
-            ) : !hasData || overview.by_category.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No categorized spending in this period.</p>
-            ) : (
-              overview.by_category.map((row) => (
-                <div key={row.category_id ?? "uncategorized"} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: row.color }} />
-                      <span className="truncate text-sm font-medium">{row.category_name}</span>
-                      <span className="text-xs text-muted-foreground shrink-0">· {row.count} expense{row.count === 1 ? "" : "s"}</span>
-                    </div>
-                    <span className="text-sm font-medium shrink-0">{formatAmount(row.total, currency)}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, row.percentage)}%`, background: row.color }} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">{pct(row.percentage)} of period</p>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-4">
+      <div className="grid gap-4 lg:grid-cols-[1fr_3fr]">
+        <div className="grid gap-4 content-start">
           <Card>
             <CardHeader>
               <CardTitle>By member · paid</CardTitle>
@@ -310,42 +279,7 @@ export function OverviewPage() {
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
 
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent expenses · {period === "today" ? "today" : period === "7d" ? "last 7 days" : "last 30 days"}</CardTitle>
-            <CardDescription>Up to 10 most recent in this period</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {isLoading && <Skeleton className="h-16 w-full" />}
-            {!isLoading && hasData && overview.recent_expenses.length === 0 && (
-              <BannerCard
-                title="No expenses in this period"
-                description="Add an expense to start tracking shared spending."
-                action={
-                  <Link to={`/${groupId}/expenses`} className={buttonVariants({ size: "sm" })}>
-                    Go to expenses
-                  </Link>
-                }
-              />
-            )}
-            {hasData &&
-              overview.recent_expenses.map((expense) => (
-                <div key={expense.id} className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{expense.description || "Expense"}</p>
-                    <p className="truncate text-xs text-muted-foreground">{formatDate(expense.expense_date)}</p>
-                  </div>
-                  <p className="shrink-0 font-medium">{formatAmount(expense.amount, currency)}</p>
-                </div>
-              ))}
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-4 content-start">
           {hasData && overview.balances.length > 0 && (
             <Card>
               <CardHeader>
@@ -374,6 +308,75 @@ export function OverviewPage() {
               </CardContent>
             </Card>
           )}
+        </div>
+
+        <div className="grid gap-4 content-start">
+          <Card>
+            <CardHeader>
+              <CardTitle>By category</CardTitle>
+              <CardDescription>Amount distribution in this period</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 h-110 overflow-y-auto">
+              {isLoading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : !hasData || overview.by_category.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No categorized spending in this period.</p>
+              ) : (
+                overview.by_category.map((row) => (
+                  <div key={row.category_id ?? "uncategorized"} className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: row.color }} />
+                        <span className="truncate text-sm font-medium">{row.category_name}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">· {row.count} expense{row.count === 1 ? "" : "s"}</span>
+                      </div>
+                      <span className="text-sm font-medium shrink-0">{formatAmount(row.total, currency)}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, row.percentage)}%`, background: row.color }} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">{pct(row.percentage)} of period</p>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent expenses · {period === "today" ? "today" : period === "7d" ? "last 7 days" : "last 30 days"}</CardTitle>
+              <CardDescription>Up to 10 most recent in this period</CardDescription>
+              {hasData && (
+                <CardAction>
+                  <Badge variant="secondary">{stats?.expense_count ?? 0} total</Badge>
+                </CardAction>
+              )}
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {isLoading && <Skeleton className="h-16 w-full" />}
+              {!isLoading && hasData && overview.recent_expenses.length === 0 && (
+                <BannerCard
+                  title="No expenses in this period"
+                  description="Add an expense to start tracking shared spending."
+                  action={
+                    <Link to={`/${groupId}/expenses`} className={buttonVariants({ size: "sm" })}>
+                      Go to expenses
+                    </Link>
+                  }
+                />
+              )}
+              {hasData &&
+                overview.recent_expenses.map((expense) => (
+                  <div key={expense.id} className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{expense.description || "Expense"}</p>
+                      <p className="truncate text-xs text-muted-foreground">{formatDate(expense.expense_date)}</p>
+                    </div>
+                    <p className="shrink-0 font-medium">{formatAmount(expense.amount, currency)}</p>
+                  </div>
+                ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

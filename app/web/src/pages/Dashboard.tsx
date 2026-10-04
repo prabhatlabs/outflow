@@ -3,7 +3,7 @@ import PageHeader from "@/components/PageHeader"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatAmount, formatDate, formatDayMonth } from "@/lib/format"
@@ -200,119 +200,39 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* By group / category — period insight */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>By group</CardTitle>
-            <CardDescription>Where your spending landed · {period === "today" ? "today" : period}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {isLoading ? (
-              <Skeleton className="h-16 w-full" />
-            ) : !hasData || dashboard.by_group.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No group spending in this period.</p>
-            ) : (
-              dashboard.by_group.map((row) => (
-                <div key={row.group_id} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <Link to={`/${row.group_id}/overview`} className="truncate text-sm font-medium hover:underline min-w-0">
-                      {row.group_name}
-                    </Link>
-                    <span className="text-sm font-medium shrink-0">{formatAmount(row.total, row.currency || currency)}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, row.percentage)}%` }} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {row.count} expense{row.count === 1 ? "" : "s"} · {pct(row.percentage)}
-                  </p>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>By category</CardTitle>
-            <CardDescription>Across all active groups</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {isLoading ? (
-              <Skeleton className="h-16 w-full" />
-            ) : !hasData || dashboard.by_category.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No categorized spending in this period.</p>
-            ) : (
-              <>
-                {dashboard.by_category.map((row) => (
-                  <div key={row.category_id ?? "uncategorized"} className="space-y-1.5">
+      <div className="grid gap-4 lg:grid-cols-[1fr_3fr]">
+        <div className="grid gap-4 content-start">
+          <Card>
+            <CardHeader>
+              <CardTitle>By group</CardTitle>
+              <CardDescription>Where your spending landed · {period === "today" ? "today" : period}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {isLoading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : !hasData || dashboard.by_group.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No group spending in this period.</p>
+              ) : (
+                dashboard.by_group.map((row) => (
+                  <div key={row.group_id} className="space-y-1.5">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: row.color }} />
-                        <span className="truncate text-sm font-medium">{row.category_name}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">· {row.count} expense{row.count === 1 ? "" : "s"}</span>
-                      </div>
-                      <span className="text-sm font-medium shrink-0">{formatAmount(row.total, currency)}</span>
+                      <Link to={`/${row.group_id}/overview`} className="truncate text-sm font-medium hover:underline min-w-0">
+                        {row.group_name}
+                      </Link>
+                      <span className="text-sm font-medium shrink-0">{formatAmount(row.total, row.currency || currency)}</span>
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${Math.min(100, row.percentage)}%`, background: row.color }} />
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, row.percentage)}%` }} />
                     </div>
-                    <p className="text-xs text-muted-foreground">{pct(row.percentage)} of period</p>
-                  </div>
-                ))}
-                {dashboard.by_currency.length > 1 && (
-                  <div className="border-t pt-3 mt-1 grid gap-2">
-                    <p className="text-xs font-medium text-muted-foreground">By currency · mixed in period</p>
-                    {dashboard.by_currency.map((row) => (
-                      <div key={row.currency} className="flex items-center justify-between gap-3 text-sm">
-                        <span className="font-medium">{row.currency}</span>
-                        <span className="text-muted-foreground text-xs">
-                          {row.count} · {pct(row.percentage)} · {formatAmount(row.total, row.currency)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent + balances & previews — activity lifted */}
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent · your involved expenses</CardTitle>
-            <CardDescription>Up to 10 in this period · {period === "today" ? "today" : period}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {isLoading && <Skeleton className="h-16 w-full" />}
-            {!isLoading && hasData && dashboard.recent_expenses.length === 0 && (
-              <p className="text-sm text-muted-foreground">No involved expenses in this period.</p>
-            )}
-            {hasData &&
-              dashboard.recent_expenses.map((e) => (
-                <div key={e.id} className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{e.description || "Expense"}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {e.group_name} · {formatDate(e.expense_date)}
+                    <p className="text-xs text-muted-foreground">
+                      {row.count} expense{row.count === 1 ? "" : "s"} · {pct(row.percentage)}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-medium">{formatAmount(e.amount, currency)}</p>
-                    <Badge variant="outline" className="text-[10px] h-5 mt-0.5">
-                      {e.group_name}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-          </CardContent>
-        </Card>
+                ))
+              )}
+            </CardContent>
+          </Card>
 
-        <div className="grid gap-4 content-start">
           {hasData && dashboard.balances_summary.length > 0 && (
             <Card>
               <CardHeader>
@@ -380,6 +300,89 @@ export default function Dashboard() {
               <Link to="/personal-budgets" className={buttonVariants({ variant: "link", className: "pl-0 pr-0 h-auto py-0 text-xs" })}>
                 View budgets
               </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 content-start">
+          <Card>
+            <CardHeader>
+              <CardTitle>By category</CardTitle>
+              <CardDescription>Across all active groups</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 h-110 overflow-y-auto">
+              {isLoading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : !hasData || dashboard.by_category.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No categorized spending in this period.</p>
+              ) : (
+                <>
+                  {dashboard.by_category.map((row) => (
+                    <div key={row.category_id ?? "uncategorized"} className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: row.color }} />
+                          <span className="truncate text-sm font-medium">{row.category_name}</span>
+                          <span className="text-xs text-muted-foreground shrink-0">· {row.count} expense{row.count === 1 ? "" : "s"}</span>
+                        </div>
+                        <span className="text-sm font-medium shrink-0">{formatAmount(row.total, currency)}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, row.percentage)}%`, background: row.color }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground">{pct(row.percentage)} of period</p>
+                    </div>
+                  ))}
+                  {dashboard.by_currency.length > 1 && (
+                    <div className="border-t pt-3 mt-1 grid gap-2">
+                      <p className="text-xs font-medium text-muted-foreground">By currency · mixed in period</p>
+                      {dashboard.by_currency.map((row) => (
+                        <div key={row.currency} className="flex items-center justify-between gap-3 text-sm">
+                          <span className="font-medium">{row.currency}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {row.count} · {pct(row.percentage)} · {formatAmount(row.total, row.currency)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent · your involved expenses</CardTitle>
+              <CardDescription>Up to 10 in this period · {period === "today" ? "today" : period}</CardDescription>
+              {hasData && (
+                <CardAction>
+                  <Badge variant="secondary">{stats?.expense_count ?? 0} total</Badge>
+                </CardAction>
+              )}
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {isLoading && <Skeleton className="h-16 w-full" />}
+              {!isLoading && hasData && dashboard.recent_expenses.length === 0 && (
+                <p className="text-sm text-muted-foreground">No involved expenses in this period.</p>
+              )}
+              {hasData &&
+                dashboard.recent_expenses.map((e) => (
+                  <div key={e.id} className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{e.description || "Expense"}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {e.group_name} · {formatDate(e.expense_date)}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-medium">{formatAmount(e.amount, currency)}</p>
+                      <Badge variant="outline" className="text-[10px] h-5 mt-0.5">
+                        {e.group_name}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
             </CardContent>
           </Card>
         </div>
