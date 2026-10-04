@@ -1,4 +1,4 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DialogProvider } from "@/providers/dialog-provider";
 import { useGroupsStore } from "@/store/groups";
 import { useEffect } from "react";
@@ -22,6 +22,9 @@ function AppLayout() {
         <div className="md:pl-0 md:p-3 bg-sidebar w-full">
           <div className="md:rounded-4xl bg-background md:border relative md:p-2">
             <div className="min-h-dvh md:min-h-[calc(100dvh-42px)] max-h-dvh md:max-h-[calc(100dvh-42px)] h-full overflow-auto">
+              <SidebarTrigger
+                className={"absolute top-0 left-0 m-2 hidden 2xl:flex rounded-full"}
+              />
               <main className="max-w-360 w-full mx-auto p-4 md:px-5">
                 <Outlet />
               </main>

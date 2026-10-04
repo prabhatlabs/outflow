@@ -238,7 +238,7 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<SidebarMenuButton size="lg" />}>
-        <Avatar size="lg">
+        <Avatar>
           {user.avatar_url && (
             <AvatarImage src={user.avatar_url} alt={user.first_name} />
           )}
@@ -290,18 +290,31 @@ function AppSidebar() {
     : [{ label: "Personal", items: PERSONAL_NAV_ITEMS }];
 
   return (
-    <Sidebar className="">
+    <Sidebar collapsible="icon" className="">
       <SidebarHeader>
-        <h5 className="text-3xl px-3">
-          <Link to={"/"}>outflow.lol</Link>
-        </h5>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              render={<Link to="/" />}
+              tooltip="outflow"
+            >
+              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                <span className="text-sm font-bold">O</span>
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">outflow</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <GroupSwitcher />
       </SidebarHeader>
 
       <SidebarContent>
         {navGroups.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="h-4">{group.label}</SidebarGroupLabel>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => {

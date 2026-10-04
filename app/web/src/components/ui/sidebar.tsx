@@ -7,6 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useIs2xl } from "@/hooks/use-media-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
@@ -88,10 +89,22 @@ function SidebarProvider({
     [setOpenProp, open]
   )
 
+  const is2xl = useIs2xl()
+
   // Helper to toggle the sidebar.
+  // Icon collapse is only allowed on 2xl+; md → 2xl stays expanded.
+  // Below md the sidebar is a Sheet drawer (isMobile).
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
-  }, [isMobile, setOpen, setOpenMobile])
+    if (isMobile) return setOpenMobile((open) => !open)
+    if (!is2xl) return
+    return setOpen((open) => !open)
+  }, [isMobile, is2xl, setOpen, setOpenMobile])
+
+  // Keep the sidebar expanded when entering the md → 2xl range
+  // (user may have collapsed it at 2xl and then shrunk the viewport).
+  React.useEffect(() => {
+    if (!isMobile && !is2xl && !open) setOpen(true)
+  }, [isMobile, is2xl, open, setOpen])
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -256,22 +269,34 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, state } = useSidebar()
 
   return (
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
-      variant="outline"
+      data-state={state}
+      data-collapsed={state === "collapsed" ? "" : undefined}
+      variant="ghost"
       size="icon-sm"
-      className={cn(className)}
+      className={cn(
+        "text-muted-foreground hover:text-foreground",
+        className
+      )}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
+      aria-label={state === "collapsed" ? "Expand sidebar" : "Collapse sidebar"}
+      title={state === "collapsed" ? "Expand sidebar" : "Collapse sidebar"}
       {...props}
     >
-      <PanelLeftIcon />
+      <PanelLeftIcon
+        className={cn(
+          "size-4 transition-transform duration-200",
+          state === "collapsed" && "rotate-180"
+        )}
+      />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
@@ -403,7 +428,7 @@ function SidebarGroupLabel({
     props: mergeProps<"div">(
       {
         className: cn(
-          "flex h-8 shrink-0 items-center rounded-xl px-3 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+          "flex h-8 shrink-0 items-center rounded-xl px-3 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=icon]:hidden focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
           className
         ),
       },
