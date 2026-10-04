@@ -1,4 +1,4 @@
--- Drop Triggers
+-- Squashed down — drops everything created by 000001_init.up.sql
 DROP TRIGGER IF EXISTS set_users_updated_at ON users;
 DROP TRIGGER IF EXISTS set_auths_updated_at ON auths;
 DROP TRIGGER IF EXISTS set_groups_updated_at ON groups;
@@ -11,31 +11,43 @@ DROP TRIGGER IF EXISTS set_settlements_updated_at ON settlements;
 DROP TRIGGER IF EXISTS set_group_budgets_updated_at ON group_budgets;
 DROP TRIGGER IF EXISTS set_personal_budgets_updated_at ON personal_budgets;
 
--- Drop Indexes
 DROP INDEX IF EXISTS idx_users_email;
 DROP INDEX IF EXISTS idx_groups_created_by;
-DROP INDEX IF EXISTS idx_group_members_user_id;
 DROP INDEX IF EXISTS idx_group_members_group_id;
 DROP INDEX IF EXISTS idx_group_members_user_status;
-DROP INDEX IF EXISTS idx_invitations_group_id;
+DROP INDEX IF EXISTS idx_group_members_user_status_gid;
+DROP INDEX IF EXISTS idx_group_members_group_status;
+DROP INDEX IF EXISTS idx_group_members_invited_by;
 DROP INDEX IF EXISTS idx_invitations_group_email;
 DROP INDEX IF EXISTS idx_invitations_token_hash;
+DROP INDEX IF EXISTS idx_invitations_email_lower_status;
+DROP INDEX IF EXISTS idx_invitations_email_lower_pending;
+DROP INDEX IF EXISTS idx_invitations_invited_by;
 DROP INDEX IF EXISTS idx_categories_group_id;
-DROP INDEX IF EXISTS idx_expenses_group_date;
-DROP INDEX IF EXISTS idx_expenses_group_category;
+DROP INDEX IF EXISTS idx_categories_created_by;
 DROP INDEX IF EXISTS idx_expenses_group_created_by;
-DROP INDEX IF EXISTS idx_expenses_group_paid_by;
-DROP INDEX IF EXISTS idx_expense_splits_expense_id;
+DROP INDEX IF EXISTS idx_expenses_group_date_created_active;
+DROP INDEX IF EXISTS idx_expenses_date_group_active;
+DROP INDEX IF EXISTS idx_expenses_group_date_active;
+DROP INDEX IF EXISTS idx_expenses_group_paid_active;
+DROP INDEX IF EXISTS idx_expenses_group_category_active;
+DROP INDEX IF EXISTS idx_expenses_paid_date_active;
+DROP INDEX IF EXISTS idx_expenses_created_by;
+DROP INDEX IF EXISTS idx_expenses_category_id;
 DROP INDEX IF EXISTS idx_expense_splits_user_id;
 DROP INDEX IF EXISTS idx_settlements_group_date;
 DROP INDEX IF EXISTS idx_settlements_group_from;
 DROP INDEX IF EXISTS idx_settlements_group_to;
-DROP INDEX IF EXISTS idx_settlement_splits_settlement_id;
+DROP INDEX IF EXISTS idx_settlements_gid_from_date;
+DROP INDEX IF EXISTS idx_settlements_gid_to_date;
+DROP INDEX IF EXISTS idx_settlements_from_date;
+DROP INDEX IF EXISTS idx_settlements_to_date;
+DROP INDEX IF EXISTS idx_settlements_from_date_gid;
+DROP INDEX IF EXISTS idx_settlements_to_date_gid;
 DROP INDEX IF EXISTS idx_settlement_splits_expense_split_id;
 DROP INDEX IF EXISTS idx_group_budgets_group_id;
 DROP INDEX IF EXISTS idx_personal_budgets_user_id;
 
--- Drop Tables (reverse dependency order)
 DROP TABLE IF EXISTS personal_budgets;
 DROP TABLE IF EXISTS group_budgets;
 DROP TABLE IF EXISTS settlement_splits;
@@ -46,10 +58,10 @@ DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS invitations;
 DROP TABLE IF EXISTS group_members;
 DROP TABLE IF EXISTS groups;
+DROP TABLE IF EXISTS email_login_codes;
 DROP TABLE IF EXISTS auths;
 DROP TABLE IF EXISTS users;
 
--- Drop Enums
 DROP TYPE IF EXISTS budget_period;
 DROP TYPE IF EXISTS payment_method;
 DROP TYPE IF EXISTS split_type;
@@ -59,5 +71,4 @@ DROP TYPE IF EXISTS group_member_role;
 DROP TYPE IF EXISTS group_type;
 DROP TYPE IF EXISTS login_provider;
 
--- Drop Function
 DROP FUNCTION IF EXISTS update_updated_at_column();

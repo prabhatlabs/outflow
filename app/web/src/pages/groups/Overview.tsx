@@ -38,7 +38,7 @@ export function OverviewPage() {
   useEffect(() => {
     if (!groupId) return
     fetchOverview(groupId, period)
-  }, [groupId, period, fetchOverview])
+  }, [groupId, fetchOverview])
 
   const currency = overview?.currency ?? currentGroup?.default_currency ?? "INR"
   const stats = overview?.stats

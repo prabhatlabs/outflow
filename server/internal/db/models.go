@@ -404,9 +404,9 @@ type Expense struct {
 	IsArchived  bool               `json:"is_archived"`
 	ArchivedAt  pgtype.Timestamptz `json:"archived_at"`
 	ExpenseDate pgtype.Date        `json:"expense_date"`
+	SplitsCount int32              `json:"splits_count"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
-	SplitsCount int32              `json:"splits_count"`
 }
 
 type ExpenseSplit struct {

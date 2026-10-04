@@ -28,25 +28,29 @@ const getDashboardBalancesSummary = `-- name: GetDashboardBalancesSummary :many
 SELECT
     g.id AS group_id,
     g.name AS group_name,
-    COALESCE((
-        SELECT SUM(e.amount) FROM expenses e
-        WHERE e.group_id = g.id AND e.paid_by = $1 AND e.is_archived = FALSE
-    ), 0)::decimal(14,2) AS paid,
-    COALESCE((
-        SELECT SUM(es.amount_owed) FROM expense_splits es
-        JOIN expenses e ON e.id = es.expense_id
-        WHERE e.group_id = g.id AND es.user_id = $1 AND e.is_archived = FALSE
-    ), 0)::decimal(14,2) AS owed,
-    COALESCE((
-        SELECT SUM(s.amount) FROM settlements s
-        WHERE s.group_id = g.id AND s.to_user_id = $1
-    ), 0)::decimal(14,2) AS settled_to,
-    COALESCE((
-        SELECT SUM(s.amount) FROM settlements s
-        WHERE s.group_id = g.id AND s.from_user_id = $1
-    ), 0)::decimal(14,2) AS settled_from
+    COALESCE(paid_agg.paid, 0)::decimal(14,2) AS paid,
+    COALESCE(owed_agg.owed, 0)::decimal(14,2) AS owed,
+    COALESCE(st_agg.settled_to, 0)::decimal(14,2) AS settled_to,
+    COALESCE(sf_agg.settled_from, 0)::decimal(14,2) AS settled_from
 FROM groups g
 JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1 AND gm.status = 'active'
+LEFT JOIN (
+    SELECT e.group_id, SUM(e.amount)::decimal(14,2) AS paid FROM expenses e
+    WHERE e.paid_by = $1 AND e.is_archived = FALSE GROUP BY e.group_id
+) paid_agg ON paid_agg.group_id = g.id
+LEFT JOIN (
+    SELECT e.group_id, SUM(es.amount_owed)::decimal(14,2) AS owed FROM expense_splits es
+    JOIN expenses e ON e.id = es.expense_id
+    WHERE es.user_id = $1 AND e.is_archived = FALSE GROUP BY e.group_id
+) owed_agg ON owed_agg.group_id = g.id
+LEFT JOIN (
+    SELECT s.group_id, SUM(s.amount)::decimal(14,2) AS settled_to FROM settlements s
+    WHERE s.to_user_id = $1 GROUP BY s.group_id
+) st_agg ON st_agg.group_id = g.id
+LEFT JOIN (
+    SELECT s.group_id, SUM(s.amount)::decimal(14,2) AS settled_from FROM settlements s
+    WHERE s.from_user_id = $1 GROUP BY s.group_id
+) sf_agg ON sf_agg.group_id = g.id
 ORDER BY g.name ASC
 `
 
@@ -96,18 +100,18 @@ SELECT
     COALESCE(SUM(e.amount), 0)::decimal(14,2) AS total_amount
 FROM expenses e
 LEFT JOIN categories c ON c.id = e.category_id
-WHERE e.expense_date BETWEEN $1 AND $2
+JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
+WHERE e.expense_date BETWEEN $2 AND $3
   AND e.is_archived = FALSE
-  AND e.group_id IN (SELECT group_id FROM group_members WHERE group_members.user_id = $3 AND status = 'active')
-  AND (e.paid_by = $3 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $3))
+  AND (e.paid_by = $1 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $1))
 GROUP BY c.id, c.name, c.color, c.icon
 ORDER BY total_amount DESC
 `
 
 type GetDashboardByCategoryParams struct {
+	UserID   pgtype.UUID `json:"user_id"`
 	FromDate pgtype.Date `json:"from_date"`
 	ToDate   pgtype.Date `json:"to_date"`
-	UserID   pgtype.UUID `json:"user_id"`
 }
 
 type GetDashboardByCategoryRow struct {
@@ -120,7 +124,7 @@ type GetDashboardByCategoryRow struct {
 }
 
 func (q *Queries) GetDashboardByCategory(ctx context.Context, arg GetDashboardByCategoryParams) ([]GetDashboardByCategoryRow, error) {
-	rows, err := q.db.Query(ctx, getDashboardByCategory, arg.FromDate, arg.ToDate, arg.UserID)
+	rows, err := q.db.Query(ctx, getDashboardByCategory, arg.UserID, arg.FromDate, arg.ToDate)
 	if err != nil {
 		return nil, err
 	}
@@ -153,18 +157,18 @@ SELECT
     COALESCE(SUM(e.amount), 0)::decimal(14,2) AS total_amount
 FROM expenses e
 JOIN groups g ON g.id = e.group_id
-WHERE e.expense_date BETWEEN $1 AND $2
+JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
+WHERE e.expense_date BETWEEN $2 AND $3
   AND e.is_archived = FALSE
-  AND e.group_id IN (SELECT group_id FROM group_members WHERE group_members.user_id = $3 AND status = 'active')
-  AND (e.paid_by = $3 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $3))
+  AND (e.paid_by = $1 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $1))
 GROUP BY g.default_currency
 ORDER BY total_amount DESC
 `
 
 type GetDashboardByCurrencyParams struct {
+	UserID   pgtype.UUID `json:"user_id"`
 	FromDate pgtype.Date `json:"from_date"`
 	ToDate   pgtype.Date `json:"to_date"`
-	UserID   pgtype.UUID `json:"user_id"`
 }
 
 type GetDashboardByCurrencyRow struct {
@@ -174,7 +178,7 @@ type GetDashboardByCurrencyRow struct {
 }
 
 func (q *Queries) GetDashboardByCurrency(ctx context.Context, arg GetDashboardByCurrencyParams) ([]GetDashboardByCurrencyRow, error) {
-	rows, err := q.db.Query(ctx, getDashboardByCurrency, arg.FromDate, arg.ToDate, arg.UserID)
+	rows, err := q.db.Query(ctx, getDashboardByCurrency, arg.UserID, arg.FromDate, arg.ToDate)
 	if err != nil {
 		return nil, err
 	}
@@ -202,18 +206,18 @@ SELECT
     COALESCE(SUM(e.amount), 0)::decimal(14,2) AS total_amount
 FROM expenses e
 JOIN groups g ON g.id = e.group_id
-WHERE e.expense_date BETWEEN $1 AND $2
+JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
+WHERE e.expense_date BETWEEN $2 AND $3
   AND e.is_archived = FALSE
-  AND e.group_id IN (SELECT group_id FROM group_members WHERE group_members.user_id = $3 AND status = 'active')
-  AND (e.paid_by = $3 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $3))
+  AND (e.paid_by = $1 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $1))
 GROUP BY g.id, g.name, g.default_currency
 ORDER BY total_amount DESC
 `
 
 type GetDashboardByGroupParams struct {
+	UserID   pgtype.UUID `json:"user_id"`
 	FromDate pgtype.Date `json:"from_date"`
 	ToDate   pgtype.Date `json:"to_date"`
-	UserID   pgtype.UUID `json:"user_id"`
 }
 
 type GetDashboardByGroupRow struct {
@@ -225,7 +229,7 @@ type GetDashboardByGroupRow struct {
 }
 
 func (q *Queries) GetDashboardByGroup(ctx context.Context, arg GetDashboardByGroupParams) ([]GetDashboardByGroupRow, error) {
-	rows, err := q.db.Query(ctx, getDashboardByGroup, arg.FromDate, arg.ToDate, arg.UserID)
+	rows, err := q.db.Query(ctx, getDashboardByGroup, arg.UserID, arg.FromDate, arg.ToDate)
 	if err != nil {
 		return nil, err
 	}
@@ -256,18 +260,18 @@ SELECT
     COUNT(DISTINCT e.id)::bigint AS expense_count,
     COALESCE(SUM(e.amount), 0)::decimal(14,2) AS total_amount
 FROM expenses e
-WHERE e.expense_date BETWEEN $1 AND $2
+JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
+WHERE e.expense_date BETWEEN $2 AND $3
   AND e.is_archived = FALSE
-  AND e.group_id IN (SELECT group_id FROM group_members WHERE group_members.user_id = $3 AND status = 'active')
-  AND (e.paid_by = $3 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $3))
+  AND (e.paid_by = $1 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $1))
 GROUP BY e.expense_date
 ORDER BY e.expense_date ASC
 `
 
 type GetDashboardDailyParams struct {
+	UserID   pgtype.UUID `json:"user_id"`
 	FromDate pgtype.Date `json:"from_date"`
 	ToDate   pgtype.Date `json:"to_date"`
-	UserID   pgtype.UUID `json:"user_id"`
 }
 
 type GetDashboardDailyRow struct {
@@ -277,7 +281,7 @@ type GetDashboardDailyRow struct {
 }
 
 func (q *Queries) GetDashboardDaily(ctx context.Context, arg GetDashboardDailyParams) ([]GetDashboardDailyRow, error) {
-	rows, err := q.db.Query(ctx, getDashboardDaily, arg.FromDate, arg.ToDate, arg.UserID)
+	rows, err := q.db.Query(ctx, getDashboardDaily, arg.UserID, arg.FromDate, arg.ToDate)
 	if err != nil {
 		return nil, err
 	}
@@ -297,22 +301,28 @@ func (q *Queries) GetDashboardDaily(ctx context.Context, arg GetDashboardDailyPa
 }
 
 const getDashboardExpenseCount = `-- name: GetDashboardExpenseCount :one
-SELECT COUNT(*)::bigint AS expense_count
-FROM expenses e
-WHERE e.expense_date BETWEEN $1 AND $2
-  AND e.is_archived = FALSE
-  AND e.group_id IN (SELECT group_id FROM group_members WHERE group_members.user_id = $3 AND status = 'active')
-  AND (e.paid_by = $3 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $3))
+SELECT COUNT(*)::bigint AS expense_count FROM (
+    SELECT e.id FROM expenses e
+    JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
+    WHERE e.expense_date BETWEEN $2 AND $3
+      AND e.is_archived = FALSE AND e.paid_by = $1
+    UNION
+    SELECT e.id FROM expenses e
+    JOIN expense_splits es2 ON es2.expense_id = e.id AND es2.user_id = $1
+    JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
+    WHERE e.expense_date BETWEEN $2 AND $3
+      AND e.is_archived = FALSE
+) u
 `
 
 type GetDashboardExpenseCountParams struct {
+	UserID   pgtype.UUID `json:"user_id"`
 	FromDate pgtype.Date `json:"from_date"`
 	ToDate   pgtype.Date `json:"to_date"`
-	UserID   pgtype.UUID `json:"user_id"`
 }
 
 func (q *Queries) GetDashboardExpenseCount(ctx context.Context, arg GetDashboardExpenseCountParams) (int64, error) {
-	row := q.db.QueryRow(ctx, getDashboardExpenseCount, arg.FromDate, arg.ToDate, arg.UserID)
+	row := q.db.QueryRow(ctx, getDashboardExpenseCount, arg.UserID, arg.FromDate, arg.ToDate)
 	var expense_count int64
 	err := row.Scan(&expense_count)
 	return expense_count, err
@@ -324,10 +334,10 @@ SELECT
     COUNT(DISTINCT e.id)::bigint AS expense_count
 FROM expense_splits es
 JOIN expenses e ON e.id = es.expense_id
+JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
 WHERE es.user_id = $1
   AND e.expense_date BETWEEN $2 AND $3
   AND e.is_archived = FALSE
-  AND e.group_id IN (SELECT group_id FROM group_members WHERE group_members.user_id = $1 AND status = 'active')
 `
 
 type GetDashboardOwedStatsParams struct {
@@ -351,12 +361,12 @@ func (q *Queries) GetDashboardOwedStats(ctx context.Context, arg GetDashboardOwe
 const getDashboardPaidStats = `-- name: GetDashboardPaidStats :one
 SELECT
     COUNT(*)::bigint AS expense_count,
-    COALESCE(SUM(amount), 0)::decimal(14,2) AS total_amount
-FROM expenses
-WHERE paid_by = $1
-  AND expense_date BETWEEN $2 AND $3
-  AND is_archived = FALSE
-  AND group_id IN (SELECT group_id FROM group_members WHERE group_members.user_id = $1 AND status = 'active')
+    COALESCE(SUM(e.amount), 0)::decimal(14,2) AS total_amount
+FROM expenses e
+JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
+WHERE e.paid_by = $1
+  AND e.expense_date BETWEEN $2 AND $3
+  AND e.is_archived = FALSE
 `
 
 type GetDashboardPaidStatsParams struct {
@@ -378,21 +388,21 @@ func (q *Queries) GetDashboardPaidStats(ctx context.Context, arg GetDashboardPai
 }
 
 const getDashboardRecent = `-- name: GetDashboardRecent :many
-SELECT e.id, e.group_id, e.created_by, e.paid_by, e.category_id, e.amount, e.description, e.note, e.split_type, e.is_archived, e.archived_at, e.expense_date, e.created_at, e.updated_at, e.splits_count, g.name AS group_name
+SELECT e.id, e.group_id, e.created_by, e.paid_by, e.category_id, e.amount, e.description, e.note, e.split_type, e.is_archived, e.archived_at, e.expense_date, e.splits_count, e.created_at, e.updated_at, g.name AS group_name
 FROM expenses e
 JOIN groups g ON g.id = e.group_id
-WHERE e.expense_date BETWEEN $1 AND $2
+JOIN group_members gm ON gm.group_id = e.group_id AND gm.user_id = $1 AND gm.status = 'active'
+WHERE e.expense_date BETWEEN $2 AND $3
   AND e.is_archived = FALSE
-  AND e.group_id IN (SELECT group_id FROM group_members WHERE group_members.user_id = $3 AND status = 'active')
-  AND (e.paid_by = $3 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $3))
+  AND (e.paid_by = $1 OR EXISTS (SELECT 1 FROM expense_splits es2 WHERE es2.expense_id = e.id AND es2.user_id = $1))
 ORDER BY e.expense_date DESC, e.created_at DESC
 LIMIT 10
 `
 
 type GetDashboardRecentParams struct {
+	UserID   pgtype.UUID `json:"user_id"`
 	FromDate pgtype.Date `json:"from_date"`
 	ToDate   pgtype.Date `json:"to_date"`
-	UserID   pgtype.UUID `json:"user_id"`
 }
 
 type GetDashboardRecentRow struct {
@@ -408,14 +418,14 @@ type GetDashboardRecentRow struct {
 	IsArchived  bool               `json:"is_archived"`
 	ArchivedAt  pgtype.Timestamptz `json:"archived_at"`
 	ExpenseDate pgtype.Date        `json:"expense_date"`
+	SplitsCount int32              `json:"splits_count"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
-	SplitsCount int32              `json:"splits_count"`
 	GroupName   string             `json:"group_name"`
 }
 
 func (q *Queries) GetDashboardRecent(ctx context.Context, arg GetDashboardRecentParams) ([]GetDashboardRecentRow, error) {
-	rows, err := q.db.Query(ctx, getDashboardRecent, arg.FromDate, arg.ToDate, arg.UserID)
+	rows, err := q.db.Query(ctx, getDashboardRecent, arg.UserID, arg.FromDate, arg.ToDate)
 	if err != nil {
 		return nil, err
 	}
@@ -436,9 +446,9 @@ func (q *Queries) GetDashboardRecent(ctx context.Context, arg GetDashboardRecent
 			&i.IsArchived,
 			&i.ArchivedAt,
 			&i.ExpenseDate,
+			&i.SplitsCount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.SplitsCount,
 			&i.GroupName,
 		); err != nil {
 			return nil, err
@@ -475,6 +485,32 @@ type GetDashboardSettlementStatsRow struct {
 func (q *Queries) GetDashboardSettlementStats(ctx context.Context, arg GetDashboardSettlementStatsParams) (GetDashboardSettlementStatsRow, error) {
 	row := q.db.QueryRow(ctx, getDashboardSettlementStats, arg.UserID, arg.FromDate, arg.ToDate)
 	var i GetDashboardSettlementStatsRow
+	err := row.Scan(&i.SettlementCount, &i.SettlementAmount)
+	return i, err
+}
+
+const getDashboardSettlementStatsUnion = `-- name: GetDashboardSettlementStatsUnion :one
+SELECT COUNT(*)::bigint AS settlement_count, COALESCE(SUM(u.amount),0)::decimal(14,2) AS settlement_amount FROM (
+    SELECT s.amount FROM settlements s WHERE s.from_user_id = $1 AND s.settlement_date BETWEEN $2 AND $3 AND s.group_id IN (SELECT group_id FROM group_members WHERE user_id = $1 AND status = 'active')
+    UNION ALL
+    SELECT s.amount FROM settlements s WHERE s.to_user_id = $1 AND s.settlement_date BETWEEN $2 AND $3 AND s.group_id IN (SELECT group_id FROM group_members WHERE user_id = $1 AND status = 'active')
+) u
+`
+
+type GetDashboardSettlementStatsUnionParams struct {
+	UserID   pgtype.UUID `json:"user_id"`
+	FromDate pgtype.Date `json:"from_date"`
+	ToDate   pgtype.Date `json:"to_date"`
+}
+
+type GetDashboardSettlementStatsUnionRow struct {
+	SettlementCount  int64          `json:"settlement_count"`
+	SettlementAmount pgtype.Numeric `json:"settlement_amount"`
+}
+
+func (q *Queries) GetDashboardSettlementStatsUnion(ctx context.Context, arg GetDashboardSettlementStatsUnionParams) (GetDashboardSettlementStatsUnionRow, error) {
+	row := q.db.QueryRow(ctx, getDashboardSettlementStatsUnion, arg.UserID, arg.FromDate, arg.ToDate)
+	var i GetDashboardSettlementStatsUnionRow
 	err := row.Scan(&i.SettlementCount, &i.SettlementAmount)
 	return i, err
 }

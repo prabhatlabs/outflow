@@ -292,7 +292,7 @@ func (s *Service) balancesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	limit, offset := lib.ParsePagination(r)
-	rows, err := s.db.Q.ListGroupBalances(r.Context(), db.ListGroupBalancesParams{
+	rows, err := s.db.Q.ListGroupBalancesAgg(r.Context(), db.ListGroupBalancesAggParams{
 		GroupID:    lib.PGUUID(groupID),
 		PageLimit:  limit,
 		PageOffset: offset,

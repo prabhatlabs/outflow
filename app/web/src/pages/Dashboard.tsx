@@ -36,7 +36,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboard(period)
-  }, [period, fetchDashboard])
+  }, [fetchDashboard])
 
   const isLoading = status === "loading" || status === "idle"
   const hasData = dashboard != null && status === "success"

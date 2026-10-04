@@ -12,3 +12,9 @@ migrate-up:
 
 migrate-down:
 	migrate -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" down 1  # this 1 means, rollback 1 migration
+
+migrate-force:
+	migrate -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" force $(version)  # version=
+
+migrate-version:
+	migrate -path $(MIGRATIONS_DIR) -database "$(DATABASE_URL)" version

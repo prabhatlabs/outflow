@@ -11,6 +11,17 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countExpenseSplitsByExpenseID = `-- name: CountExpenseSplitsByExpenseID :one
+SELECT COUNT(*)::bigint FROM expense_splits WHERE expense_id = $1
+`
+
+func (q *Queries) CountExpenseSplitsByExpenseID(ctx context.Context, expenseID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countExpenseSplitsByExpenseID, expenseID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const createExpenseSplit = `-- name: CreateExpenseSplit :one
 INSERT INTO expense_splits (
     expense_id,
@@ -56,6 +67,14 @@ func (q *Queries) CreateExpenseSplit(ctx context.Context, arg CreateExpenseSplit
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+type CreateExpenseSplitsBatchParams struct {
+	ExpenseID  pgtype.UUID    `json:"expense_id"`
+	UserID     pgtype.UUID    `json:"user_id"`
+	AmountOwed pgtype.Numeric `json:"amount_owed"`
+	Percentage pgtype.Numeric `json:"percentage"`
+	Shares     pgtype.Numeric `json:"shares"`
 }
 
 const deleteExpenseSplit = `-- name: DeleteExpenseSplit :exec
@@ -236,4 +255,34 @@ func (q *Queries) UpdateExpenseSplit(ctx context.Context, arg UpdateExpenseSplit
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const validateGroupMembersActive = `-- name: ValidateGroupMembersActive :many
+SELECT user_id FROM group_members
+WHERE group_id = $1 AND status = 'active' AND user_id = ANY($2::uuid[])
+`
+
+type ValidateGroupMembersActiveParams struct {
+	GroupID pgtype.UUID   `json:"group_id"`
+	UserIds []pgtype.UUID `json:"user_ids"`
+}
+
+func (q *Queries) ValidateGroupMembersActive(ctx context.Context, arg ValidateGroupMembersActiveParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, validateGroupMembersActive, arg.GroupID, arg.UserIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var user_id pgtype.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

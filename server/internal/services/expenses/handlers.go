@@ -51,12 +51,14 @@ func parseSplitType(s string) (db.SplitType, bool) {
 }
 
 // validateSplits checks amounts add up and every user is an active member.
+// Membership is verified in a single query via ValidateGroupMembersActive.
 func (s *Service) validateSplits(r *http.Request, groupID pgtype.UUID, amount float64, splits []splitInput, splitType db.SplitType) string {
 	if len(splits) == 0 {
 		return "At least one split is required"
 	}
 
 	seen := make(map[uuid.UUID]bool, len(splits))
+	ids := make([]pgtype.UUID, 0, len(splits))
 	var sum float64
 	for _, sp := range splits {
 		uid, err := uuid.Parse(sp.UserID)
@@ -80,15 +82,16 @@ func (s *Service) validateSplits(r *http.Request, groupID pgtype.UUID, amount fl
 		if splitType == db.SplitTypeShares && (sp.Shares == nil || *sp.Shares <= 0) {
 			return "Share splits need a share count"
 		}
-
-		member, err := s.db.Q.GetGroupMemberByUserAndGroup(r.Context(), db.GetGroupMemberByUserAndGroupParams{
-			UserID:  lib.PGUUID(uid),
-			GroupID: groupID,
-		})
-		if err != nil || member.Status != db.GroupMemberStatusActive {
-			return "All split participants must be active group members"
-		}
+		ids = append(ids, lib.PGUUID(uid))
 		sum += sp.AmountOwed
+	}
+
+	active, err := s.db.Q.ValidateGroupMembersActive(r.Context(), db.ValidateGroupMembersActiveParams{
+		GroupID: groupID,
+		UserIds: ids,
+	})
+	if err != nil || len(active) != len(splits) {
+		return "All split participants must be active group members"
 	}
 
 	if !amountClose(sum, amount) {
@@ -154,7 +157,7 @@ func (s *Service) fetchExpenseWithSplits(ctx context.Context, expenseID pgtype.U
 	}
 	splits, err := s.db.Q.ListExpenseSplitsByExpenseID(ctx, db.ListExpenseSplitsByExpenseIDParams{
 		ExpenseID:  expenseID,
-		PageLimit:  50,
+		PageLimit:  200,
 		PageOffset: 0,
 	})
 	if err != nil {
@@ -170,29 +173,47 @@ func (s *Service) listHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	limit, offset := lib.ParsePagination(r)
-	params := db.ListExpensesByGroupFilteredParams{
-		GroupID:    lib.PGUUID(groupID),
-		PageLimit:  limit,
-		PageOffset: offset,
+	q := r.URL.Query()
+	includeArchived := false
+	if archived, err := strconv.ParseBool(q.Get("include_archived")); err == nil && archived {
+		includeArchived = true
 	}
+	var (
+		catID pgtype.UUID
+		paidBy pgtype.UUID
+		fromDate pgtype.Date
+		toDate pgtype.Date
+	)
 	if cat, ok := lib.UUIDFromQuery(r, "category_id"); ok {
-		params.CategoryID = cat
+		catID = cat
 	}
 	if pb, ok := lib.UUIDFromQuery(r, "paid_by"); ok {
-		params.PaidBy = pb
+		paidBy = pb
 	}
-	q := r.URL.Query()
 	if from, err := time.Parse(time.DateOnly, q.Get("from")); err == nil && q.Get("from") != "" {
-		params.FromDate = lib.Date(from)
+		fromDate = lib.Date(from)
 	}
 	if to, err := time.Parse(time.DateOnly, q.Get("to")); err == nil && q.Get("to") != "" {
-		params.ToDate = lib.Date(to)
-	}
-	if archived, err := strconv.ParseBool(q.Get("include_archived")); err == nil && archived {
-		params.IncludeArchived = lib.Bool(true)
+		toDate = lib.Date(to)
 	}
 
-	expenses, err := s.db.Q.ListExpensesByGroupFiltered(r.Context(), params)
+	var (
+		expenses []db.Expense
+		err      error
+	)
+	if includeArchived {
+		expenses, err = s.db.Q.ListExpensesByGroupFiltered(r.Context(), db.ListExpensesByGroupFilteredParams{
+			GroupID: lib.PGUUID(groupID), CategoryID: catID, PaidBy: paidBy,
+			FromDate: fromDate, ToDate: toDate,
+			IncludeArchived: lib.Bool(true), PageLimit: limit, PageOffset: offset,
+		})
+	} else {
+		expenses, err = s.db.Q.ListExpensesByGroupFilteredActive(r.Context(), db.ListExpensesByGroupFilteredActiveParams{
+			GroupID: lib.PGUUID(groupID), CategoryID: catID, PaidBy: paidBy,
+			FromDate: fromDate, ToDate: toDate,
+			PageLimit: limit, PageOffset: offset,
+		})
+	}
 	if err != nil {
 		response.InternalServerError(w, err, "Failed to fetch expenses")
 		return
@@ -243,15 +264,22 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 
 	out.Splits, err = s.db.Q.ListExpenseSplitsByExpenseID(r.Context(), db.ListExpenseSplitsByExpenseIDParams{
 		ExpenseID:  out.Expense.ID,
-		PageLimit:  50,
+		PageLimit:  200,
 		PageOffset: 0,
 	})
 	if err != nil {
 		out.Splits = []db.ExpenseSplit{}
 	}
-	// CreateExpense ran before the splits were inserted, so its RETURNING *
-	// still carries the default count. Sync it with the stored value.
-	out.Expense.SplitsCount = int32(len(out.Splits))
+	// If >200 splits (edge), fall back to authoritative count from expenses row
+	if len(out.Splits) == 200 {
+		if cnt, err2 := s.db.Q.CountExpenseSplitsByExpenseID(r.Context(), out.Expense.ID); err2 == nil {
+			out.Expense.SplitsCount = int32(cnt)
+		} else {
+			out.Expense.SplitsCount = int32(len(out.Splits))
+		}
+	} else {
+		out.Expense.SplitsCount = int32(len(out.Splits))
+	}
 
 	response.Created(w, "Expense created successfully", out)
 }
@@ -358,16 +386,28 @@ func replaceSplits(ctx context.Context, q *db.Queries, expenseID pgtype.UUID, sp
 	if err := q.DeleteExpenseSplitsByExpenseID(ctx, expenseID); err != nil {
 		return err
 	}
-	for _, sp := range splits {
-		sp.ExpenseID = expenseID
-		if _, err := q.CreateExpenseSplit(ctx, sp); err != nil {
+	if len(splits) > 0 {
+		rows := make([]db.CreateExpenseSplitsBatchParams, 0, len(splits))
+		for _, sp := range splits {
+			rows = append(rows, db.CreateExpenseSplitsBatchParams{
+				ExpenseID:  expenseID,
+				UserID:     sp.UserID,
+				AmountOwed: sp.AmountOwed,
+				Percentage: sp.Percentage,
+				Shares:     sp.Shares,
+			})
+		}
+		if _, err := q.CreateExpenseSplitsBatch(ctx, rows); err != nil {
 			return err
 		}
 	}
-	return q.UpdateExpenseSplitsCount(ctx, db.UpdateExpenseSplitsCountParams{
+	if _, err := q.UpdateExpenseSplitsCount(ctx, db.UpdateExpenseSplitsCountParams{
 		SplitsCount: int32(len(splits)),
 		ID:          expenseID,
-	})
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Service) getHandler(w http.ResponseWriter, r *http.Request) {
@@ -545,7 +585,7 @@ func (s *Service) editHandler(w http.ResponseWriter, r *http.Request) {
 		// books stay balanced
 		old, err := s.db.Q.ListExpenseSplitsByExpenseID(r.Context(), db.ListExpenseSplitsByExpenseIDParams{
 			ExpenseID:  expenseID,
-			PageLimit:  50,
+			PageLimit:  200,
 			PageOffset: 0,
 		})
 		if err != nil {

@@ -12,6 +12,9 @@ LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 SELECT * FROM expense_splits WHERE user_id = $1 ORDER BY created_at DESC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
+-- name: CountExpenseSplitsByExpenseID :one
+SELECT COUNT(*)::bigint FROM expense_splits WHERE expense_id = $1;
+
 -- name: CreateExpenseSplit :one
 INSERT INTO expense_splits (
     expense_id,
@@ -28,6 +31,10 @@ INSERT INTO expense_splits (
 )
 RETURNING *;
 
+-- name: CreateExpenseSplitsBatch :copyfrom
+INSERT INTO expense_splits (expense_id, user_id, amount_owed, percentage, shares)
+VALUES ($1, $2, $3, $4, $5);
+
 -- name: UpdateExpenseSplit :one
 UPDATE expense_splits SET
     amount_owed = COALESCE(sqlc.narg(amount_owed), amount_owed),
@@ -41,3 +48,7 @@ DELETE FROM expense_splits WHERE id = $1;
 
 -- name: DeleteExpenseSplitsByExpenseID :exec
 DELETE FROM expense_splits WHERE expense_id = $1;
+
+-- name: ValidateGroupMembersActive :many
+SELECT user_id FROM group_members
+WHERE group_id = $1 AND status = 'active' AND user_id = ANY(sqlc.arg(user_ids)::uuid[]);

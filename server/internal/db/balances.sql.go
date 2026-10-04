@@ -60,12 +60,7 @@ type ListGroupBalancesRow struct {
 	SettledFrom pgtype.Numeric `json:"settled_from"`
 }
 
-// Net balance per active member:
-//
-//	owed    = sum of their expense_splits.amount_owed
-//	paid    = sum of expenses they paid for
-//	settled = net settlements (received - sent)
-//	net     = owed - paid - settled... computed in Go; here raw components
+// Legacy N×4 correlated variant (kept). Prefer Agg below.
 func (q *Queries) ListGroupBalances(ctx context.Context, arg ListGroupBalancesParams) ([]ListGroupBalancesRow, error) {
 	rows, err := q.db.Query(ctx, listGroupBalances, arg.GroupID, arg.PageOffset, arg.PageLimit)
 	if err != nil {
@@ -75,6 +70,87 @@ func (q *Queries) ListGroupBalances(ctx context.Context, arg ListGroupBalancesPa
 	var items []ListGroupBalancesRow
 	for rows.Next() {
 		var i ListGroupBalancesRow
+		if err := rows.Scan(
+			&i.UserID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Owed,
+			&i.Paid,
+			&i.SettledTo,
+			&i.SettledFrom,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listGroupBalancesAgg = `-- name: ListGroupBalancesAgg :many
+SELECT
+    gm.user_id,
+    u.first_name,
+    u.last_name,
+    COALESCE(owed_agg.owed, 0)::DECIMAL(14,2) AS owed,
+    COALESCE(paid_agg.paid, 0)::DECIMAL(14,2) AS paid,
+    COALESCE(st_agg.settled_to, 0)::DECIMAL(14,2) AS settled_to,
+    COALESCE(sf_agg.settled_from, 0)::DECIMAL(14,2) AS settled_from
+FROM group_members gm
+JOIN users u ON u.id = gm.user_id
+LEFT JOIN (
+    SELECT es.user_id, SUM(es.amount_owed)::DECIMAL(14,2) AS owed
+    FROM expense_splits es
+    JOIN expenses e ON e.id = es.expense_id
+    WHERE e.group_id = $1 AND e.is_archived = FALSE
+    GROUP BY es.user_id
+) owed_agg ON owed_agg.user_id = gm.user_id
+LEFT JOIN (
+    SELECT e.paid_by, SUM(e.amount)::DECIMAL(14,2) AS paid
+    FROM expenses e
+    WHERE e.group_id = $1 AND e.is_archived = FALSE
+    GROUP BY e.paid_by
+) paid_agg ON paid_agg.paid_by = gm.user_id
+LEFT JOIN (
+    SELECT s.to_user_id, SUM(s.amount)::DECIMAL(14,2) AS settled_to
+    FROM settlements s WHERE s.group_id = $1 GROUP BY s.to_user_id
+) st_agg ON st_agg.to_user_id = gm.user_id
+LEFT JOIN (
+    SELECT s.from_user_id, SUM(s.amount)::DECIMAL(14,2) AS settled_from
+    FROM settlements s WHERE s.group_id = $1 GROUP BY s.from_user_id
+) sf_agg ON sf_agg.from_user_id = gm.user_id
+WHERE gm.group_id = $1 AND gm.status = 'active'
+ORDER BY u.first_name ASC
+LIMIT $3 OFFSET $2
+`
+
+type ListGroupBalancesAggParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+type ListGroupBalancesAggRow struct {
+	UserID      pgtype.UUID    `json:"user_id"`
+	FirstName   string         `json:"first_name"`
+	LastName    pgtype.Text    `json:"last_name"`
+	Owed        pgtype.Numeric `json:"owed"`
+	Paid        pgtype.Numeric `json:"paid"`
+	SettledTo   pgtype.Numeric `json:"settled_to"`
+	SettledFrom pgtype.Numeric `json:"settled_from"`
+}
+
+func (q *Queries) ListGroupBalancesAgg(ctx context.Context, arg ListGroupBalancesAggParams) ([]ListGroupBalancesAggRow, error) {
+	rows, err := q.db.Query(ctx, listGroupBalancesAgg, arg.GroupID, arg.PageOffset, arg.PageLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListGroupBalancesAggRow
+	for rows.Next() {
+		var i ListGroupBalancesAggRow
 		if err := rows.Scan(
 			&i.UserID,
 			&i.FirstName,

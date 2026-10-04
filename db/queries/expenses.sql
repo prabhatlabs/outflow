@@ -55,8 +55,19 @@ UPDATE expenses SET
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
--- name: UpdateExpenseSplitsCount :exec
-UPDATE expenses SET splits_count = sqlc.arg(splits_count) WHERE id = sqlc.arg(id);
+-- name: UpdateExpenseSplitsCount :one
+UPDATE expenses SET splits_count = sqlc.arg(splits_count) WHERE id = sqlc.arg(id) RETURNING splits_count;
+
+-- name: CountExpensesByGroupFilteredActive :one
+SELECT COUNT(*)::bigint FROM expenses
+WHERE group_id = sqlc.arg(group_id) AND is_archived = FALSE
+  AND (sqlc.narg(category_id)::uuid IS NULL OR category_id = sqlc.narg(category_id))
+  AND (sqlc.narg(paid_by)::uuid IS NULL OR paid_by = sqlc.narg(paid_by))
+  AND (sqlc.narg(from_date)::date IS NULL OR expense_date >= sqlc.narg(from_date))
+  AND (sqlc.narg(to_date)::date IS NULL OR expense_date <= sqlc.narg(to_date));
+
+-- name: GetExpenseByIDForUpdate :one
+SELECT * FROM expenses WHERE id = $1 FOR UPDATE;
 
 -- name: ArchiveExpense :one
 UPDATE expenses SET

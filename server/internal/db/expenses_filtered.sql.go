@@ -12,7 +12,7 @@ import (
 )
 
 const listExpensesByGroupFiltered = `-- name: ListExpensesByGroupFiltered :many
-SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count FROM expenses
+SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, splits_count, created_at, updated_at FROM expenses
 WHERE group_id = $1
   AND ($2::uuid IS NULL OR category_id = $2)
   AND ($3::uuid IS NULL OR paid_by = $3)
@@ -34,6 +34,9 @@ type ListExpensesByGroupFilteredParams struct {
 	PageLimit       int32       `json:"page_limit"`
 }
 
+// Legacy generic filter (kept for include_archived=true path). Prefer the
+// Active variant below for the common is_archived=FALSE case which can use
+// partial indexes (see 000005_overview_indexes).
 func (q *Queries) ListExpensesByGroupFiltered(ctx context.Context, arg ListExpensesByGroupFilteredParams) ([]Expense, error) {
 	rows, err := q.db.Query(ctx, listExpensesByGroupFiltered,
 		arg.GroupID,
@@ -65,9 +68,78 @@ func (q *Queries) ListExpensesByGroupFiltered(ctx context.Context, arg ListExpen
 			&i.IsArchived,
 			&i.ArchivedAt,
 			&i.ExpenseDate,
+			&i.SplitsCount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listExpensesByGroupFilteredActive = `-- name: ListExpensesByGroupFilteredActive :many
+SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, splits_count, created_at, updated_at FROM expenses
+WHERE group_id = $1
+  AND is_archived = FALSE
+  AND ($2::uuid IS NULL OR category_id = $2)
+  AND ($3::uuid IS NULL OR paid_by = $3)
+  AND ($4::date IS NULL OR expense_date >= $4)
+  AND ($5::date IS NULL OR expense_date <= $5)
+ORDER BY expense_date DESC, created_at DESC
+LIMIT $7 OFFSET $6
+`
+
+type ListExpensesByGroupFilteredActiveParams struct {
+	GroupID    pgtype.UUID `json:"group_id"`
+	CategoryID pgtype.UUID `json:"category_id"`
+	PaidBy     pgtype.UUID `json:"paid_by"`
+	FromDate   pgtype.Date `json:"from_date"`
+	ToDate     pgtype.Date `json:"to_date"`
+	PageOffset int32       `json:"page_offset"`
+	PageLimit  int32       `json:"page_limit"`
+}
+
+// Hot path: is_archived hard-coded to FALSE so the partial indexes
+// idx_expenses_group_*_active (000005) apply. Caller should branch to this
+// when include_archived is false (the common case).
+func (q *Queries) ListExpensesByGroupFilteredActive(ctx context.Context, arg ListExpensesByGroupFilteredActiveParams) ([]Expense, error) {
+	rows, err := q.db.Query(ctx, listExpensesByGroupFilteredActive,
+		arg.GroupID,
+		arg.CategoryID,
+		arg.PaidBy,
+		arg.FromDate,
+		arg.ToDate,
+		arg.PageOffset,
+		arg.PageLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Expense
+	for rows.Next() {
+		var i Expense
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupID,
+			&i.CreatedBy,
+			&i.PaidBy,
+			&i.CategoryID,
+			&i.Amount,
+			&i.Description,
+			&i.Note,
+			&i.SplitType,
+			&i.IsArchived,
+			&i.ArchivedAt,
+			&i.ExpenseDate,
 			&i.SplitsCount,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}

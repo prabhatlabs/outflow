@@ -240,7 +240,7 @@ func (q *Queries) GetOverviewMemberCount(ctx context.Context, groupID pgtype.UUI
 }
 
 const getOverviewRecent = `-- name: GetOverviewRecent :many
-SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, created_at, updated_at, splits_count
+SELECT id, group_id, created_by, paid_by, category_id, amount, description, note, split_type, is_archived, archived_at, expense_date, splits_count, created_at, updated_at
 FROM expenses
 WHERE group_id = $1
   AND expense_date BETWEEN $2 AND $3
@@ -277,9 +277,9 @@ func (q *Queries) GetOverviewRecent(ctx context.Context, arg GetOverviewRecentPa
 			&i.IsArchived,
 			&i.ArchivedAt,
 			&i.ExpenseDate,
+			&i.SplitsCount,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.SplitsCount,
 		); err != nil {
 			return nil, err
 		}

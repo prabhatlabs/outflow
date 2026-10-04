@@ -170,7 +170,7 @@ func (s *Service) overviewHandler(w http.ResponseWriter, r *http.Request) {
 		owedRows      []db.GetOverviewByMemberOwedRow
 		dailyRows     []db.GetOverviewDailyRow
 		recentRows    []db.Expense
-		balanceRows   []db.ListGroupBalancesRow
+		balanceRows   []db.ListGroupBalancesAggRow
 	)
 	g, gctx := errgroup.WithContext(r.Context())
 
@@ -216,7 +216,7 @@ func (s *Service) overviewHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	g.Go(func() error {
 		var err error
-		balanceRows, err = s.db.Q.ListGroupBalances(gctx, db.ListGroupBalancesParams{GroupID: groupPgID, PageLimit: 100, PageOffset: 0})
+		balanceRows, err = s.db.Q.ListGroupBalancesAgg(gctx, db.ListGroupBalancesAggParams{GroupID: groupPgID, PageLimit: 100, PageOffset: 0})
 		return err
 	})
 

@@ -162,20 +162,24 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		out.Settlement = settlement
 
-		for _, sid := range splitIDs {
-			es, err := q.GetExpenseSplitByID(r.Context(), sid)
-			if err != nil {
-				return errors.New("expense split not found")
+		if len(splitIDs) > 0 {
+			for _, sid := range splitIDs {
+				es, err := q.GetExpenseSplitByID(r.Context(), sid)
+				if err != nil {
+					return errors.New("expense split not found")
+				}
+				expense, err := q.GetExpenseByID(r.Context(), es.ExpenseID)
+				if err != nil || expense.GroupID != pg {
+					return errors.New("expense split not in this group")
+				}
 			}
-			expense, err := q.GetExpenseByID(r.Context(), es.ExpenseID)
-			if err != nil || expense.GroupID != pg {
-				return errors.New("expense split not in this group")
-			}
-			if _, err := q.CreateSettlementSplit(r.Context(), db.CreateSettlementSplitParams{
-				SettlementID:   settlement.ID,
-				ExpenseSplitID: sid,
-			}); err != nil {
-				return err
+			for _, sid := range splitIDs {
+				if _, err := q.CreateSettlementSplit(r.Context(), db.CreateSettlementSplitParams{
+					SettlementID:   settlement.ID,
+					ExpenseSplitID: sid,
+				}); err != nil {
+					return err
+				}
 			}
 		}
 		return nil
@@ -191,7 +195,7 @@ func (s *Service) createHandler(w http.ResponseWriter, r *http.Request) {
 
 	out.Splits, _ = s.db.Q.ListSettlementSplitsBySettlementID(r.Context(), db.ListSettlementSplitsBySettlementIDParams{
 		SettlementID: out.Settlement.ID,
-		PageLimit:    50,
+		PageLimit:    200,
 		PageOffset:   0,
 	})
 
