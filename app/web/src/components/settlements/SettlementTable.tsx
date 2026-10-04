@@ -10,22 +10,17 @@ import {
 } from "@/components/ui/table"
 import { formatDate, formatAmount, memberNameById } from "@/lib/format"
 import type { GroupMemberWithUser } from "@/lib/types"
-import { Trash2 } from "lucide-react"
+import { Undo2 } from "lucide-react"
 import type { Settlement } from "./SettlementListItem"
 
 type Props = {
   settlements: Settlement[]
   members: GroupMemberWithUser[]
   currency: string
-  onDelete: (settlement: Settlement) => void
+  onReverse: (settlement: Settlement) => void
 }
 
-export function SettlementTable({
-  settlements,
-  members,
-  currency,
-  onDelete,
-}: Props) {
+export function SettlementTable({ settlements, members, currency, onReverse }: Props) {
   return (
     <Table>
       <TableHeader>
@@ -47,24 +42,16 @@ export function SettlementTable({
             <TableCell className="truncate min-w-0 max-w-40">
               {memberNameById(members, settlement.to_user_id)}
             </TableCell>
-            <TableCell>
-              {formatAmount(settlement.amount, currency)}
-            </TableCell>
+            <TableCell>{formatAmount(settlement.amount, currency)}</TableCell>
             <TableCell>
               <Badge variant="secondary">{settlement.payment_method}</Badge>
             </TableCell>
             <TableCell>{formatDate(settlement.settlement_date)}</TableCell>
             <TableCell>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="xs"
-                  variant="destructive"
-                  onClick={() => onDelete(settlement)}
-                >
-                  <Trash2 />
-                  Delete
-                </Button>
-              </div>
+              <Button size="xs" variant="outline" onClick={() => onReverse(settlement)}>
+                <Undo2 />
+                Reverse
+              </Button>
             </TableCell>
           </TableRow>
         ))}

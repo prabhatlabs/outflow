@@ -12,6 +12,7 @@ import { useBalancesStore } from "@/store/balances"
 import { useDialogStore } from "@/store/dialog"
 import { useGroupsStore } from "@/store/groups"
 import { useMembersStore } from "@/store/members"
+import { cn } from "cn"
 
 type Suggestion = {
   from: BalanceRow
@@ -88,7 +89,7 @@ export function SettleUpPage() {
         actions={
           <Link
             to={`/${groupId}/settlements`}
-            className={buttonVariants({ variant: "outline" })}
+            className={cn(buttonVariants({ variant: "outline" }))}
           >
             Settlement history
           </Link>

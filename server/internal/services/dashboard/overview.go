@@ -2,7 +2,6 @@ package dashboard
 
 import (
 	"log"
-	"math/big"
 	"net/http"
 	"time"
 
@@ -57,10 +56,7 @@ func numericToFloat(n pgtype.Numeric) float64 {
 func numSub(a, b pgtype.Numeric) pgtype.Numeric {
 	af, _ := a.Float64Value()
 	bf, _ := b.Float64Value()
-	res := big.NewFloat(af.Float64 - bf.Float64)
-	var n pgtype.Numeric
-	_ = n.Scan(res)
-	return n
+	return lib.Numeric(af.Float64 - bf.Float64)
 }
 
 type dashboardStats struct {

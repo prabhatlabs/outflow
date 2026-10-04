@@ -54,6 +54,8 @@ export function SettlementDialog({
   const membersStatus = useMembersStore((s) => s.status)
   const fetchMembers = useMembersStore((s) => s.fetch)
 
+  const getMemberNameByUserId = useMembersStore((s) => s.getMemberNameByUserId)
+
   const activeMembers = useMemo(
     () => members.filter((m) => m.status === "active"),
     [members],
@@ -65,6 +67,15 @@ export function SettlementDialog({
 
   const [fromUser, setFromUser] = useState(payload?.fromUserId ?? "")
   const [toUser, setToUser] = useState(payload?.toUserId ?? "")
+
+  const fromMemberName = useMemo(() => {
+    if (!fromUser) return ""
+    return getMemberNameByUserId(fromUser)
+  }, [fromUser, getMemberNameByUserId, members])
+  const toMemberName = useMemo(() => {
+    if (!toUser) return ""
+    return getMemberNameByUserId(toUser)
+  }, [toUser, getMemberNameByUserId, members])
   const [amount, setAmount] = useState(
     payload?.amount !== undefined ? String(payload.amount) : "",
   )
@@ -148,7 +159,11 @@ export function SettlementDialog({
               }
             >
               <SelectTrigger id="settlement-from" className="w-full">
-                <SelectValue placeholder="Select member" />
+                {fromUser && fromMemberName ? (
+                  <span className="truncate">{fromMemberName}</span>
+                ) : (
+                  <SelectValue placeholder="Select member" />
+                )}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NO_MEMBER_VALUE}>
@@ -171,7 +186,11 @@ export function SettlementDialog({
               }
             >
               <SelectTrigger id="settlement-to" className="w-full">
-                <SelectValue placeholder="Select member" />
+                {toUser && toMemberName ? (
+                  <span className="truncate">{toMemberName}</span>
+                ) : (
+                  <SelectValue placeholder="Select member" />
+                )}
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NO_MEMBER_VALUE}>Select member</SelectItem>

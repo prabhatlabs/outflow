@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatDate, formatAmount, memberNameById } from "@/lib/format"
 import type { GroupMemberWithUser, Settlement } from "@/lib/types"
-import { ArrowRight, Trash2 } from "lucide-react"
+import { ArrowRight, Undo2 } from "lucide-react"
 
 export type { Settlement }
 
@@ -11,15 +11,10 @@ type Props = {
   settlement: Settlement
   members: GroupMemberWithUser[]
   currency: string
-  onDelete: (settlement: Settlement) => void
+  onReverse: (settlement: Settlement) => void
 }
 
-export function SettlementListItem({
-  settlement,
-  members,
-  currency,
-  onDelete,
-}: Props) {
+export function SettlementListItem({ settlement, members, currency, onReverse }: Props) {
   return (
     <Card className="py-3">
       <CardContent className="flex items-start justify-between gap-3 px-3">
@@ -35,21 +30,13 @@ export function SettlementListItem({
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Badge variant="secondary">{settlement.payment_method}</Badge>
-            {settlement.note && (
-              <Badge variant="outline">{settlement.note}</Badge>
-            )}
+            {settlement.note && <Badge variant="outline">{settlement.note}</Badge>}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="destructive"
-            onClick={() => onDelete(settlement)}
-          >
-            <Trash2 />
-            Delete
-          </Button>
-        </div>
+        <Button size="xs" variant="outline" onClick={() => onReverse(settlement)}>
+          <Undo2 />
+          Reverse
+        </Button>
       </CardContent>
     </Card>
   )

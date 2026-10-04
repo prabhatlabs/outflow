@@ -25,7 +25,6 @@ export function SettlementsPage() {
   const hasMore = useSettlementsStore((s) => s.hasMore)
   const fetch = useSettlementsStore((s) => s.fetch)
   const fetchMore = useSettlementsStore((s) => s.fetchMore)
-  const remove = useSettlementsStore((s) => s.remove)
 
   const members = useMembersStore((s) => s.items)
   const membersStatus = useMembersStore((s) => s.status)
@@ -42,15 +41,19 @@ export function SettlementsPage() {
   const mode = useViewModeStore((s) => s.mode)
   const currency = currentGroup?.default_currency ?? "INR"
 
-  const handleDelete = (settlement: Settlement) => {
+  const handleReverse = (settlement: Settlement) => {
     if (!groupId) return
-    useDialogStore.getState().open("confirm", {
-      title: "Delete settlement?",
-      description: "This cannot be undone.",
-      destructive: true,
-      confirmLabel: "Delete",
-      onConfirm: () => remove(groupId, settlement.id),
+    useDialogStore.getState().open("settlement", {
+      groupId,
+      fromUserId: settlement.to_user_id,
+      toUserId: settlement.from_user_id,
+      amount: Number(settlement.amount),
     })
+  }
+
+  const handleRecordPayment = () => {
+    if (!groupId) return
+    useDialogStore.getState().open("settlement", { groupId })
   }
 
   return (
@@ -59,13 +62,19 @@ export function SettlementsPage() {
         title="Settlements"
         description="Payments between members that settle group balances."
         actions={
-          <Link
-            to={`/${groupId}/settlements/new`}
-            className={buttonVariants()}
-          >
-            <HandCoins className="size-4" />
-            Settle up
-          </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleRecordPayment}>
+              <HandCoins className="size-4" />
+              Record payment
+            </Button>
+            <Link
+              to={`/${groupId}/settlements/new`}
+              className={buttonVariants()}
+            >
+              <HandCoins className="size-4" />
+              Settle up
+            </Link>
+          </div>
         }
       />
 
@@ -105,14 +114,14 @@ export function SettlementsPage() {
             settlements={items}
             members={members}
             currency={currency}
-            onDelete={handleDelete}
+            onReverse={handleReverse}
           />
         ) : (
           <SettlementList
             settlements={items}
             members={members}
             currency={currency}
-            onDelete={handleDelete}
+            onReverse={handleReverse}
           />
         ))}
 

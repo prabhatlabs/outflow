@@ -27,7 +27,6 @@ type SettlementsState = {
     groupId: string,
     input: CreateSettlementInput,
   ) => Promise<SettlementWithSplits>
-  remove: (groupId: string, id: string) => Promise<void>
   clear: () => void
 }
 
@@ -105,12 +104,6 @@ export const useSettlementsStore = create<SettlementsState>((set, get) => ({
     const { items } = get()
     set({ items: [settlement as unknown as Settlement, ...items], offset: items.length + 1 })
     return settlement
-  },
-
-  remove: async (groupId, id) => {
-    await api.del(`/groups/${groupId}/settlements/${id}`)
-    const { items } = get()
-    set({ items: items.filter((s) => s.id !== id), offset: Math.max(0, items.length - 1) })
   },
 
   clear: () =>

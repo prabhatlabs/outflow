@@ -5,15 +5,10 @@ type Props = {
   settlements: Settlement[]
   members: GroupMemberWithUser[]
   currency: string
-  onDelete: (settlement: Settlement) => void
+  onReverse: (settlement: Settlement) => void
 }
 
-export function SettlementList({
-  settlements,
-  members,
-  currency,
-  onDelete,
-}: Props) {
+export function SettlementList({ settlements, members, currency, onReverse }: Props) {
   return (
     <div className="grid gap-3">
       {settlements.map((settlement) => (
@@ -22,7 +17,7 @@ export function SettlementList({
           settlement={settlement}
           members={members}
           currency={currency}
-          onDelete={onDelete}
+          onReverse={onReverse}
         />
       ))}
     </div>

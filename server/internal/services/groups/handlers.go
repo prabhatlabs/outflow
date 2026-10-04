@@ -3,7 +3,6 @@ package groups
 import (
 	"encoding/json/v2"
 	"errors"
-	"math/big"
 	"net/http"
 	"strings"
 
@@ -276,10 +275,7 @@ type balanceRow struct {
 func numSub(a, b pgtype.Numeric) pgtype.Numeric {
 	af, _ := a.Float64Value()
 	bf, _ := b.Float64Value()
-	res := big.NewFloat(af.Float64 - bf.Float64)
-	var n pgtype.Numeric
-	_ = n.Scan(res)
-	return n
+	return lib.Numeric(af.Float64 - bf.Float64)
 }
 
 // balancesHandler computes net position per active member:
